@@ -39,4 +39,12 @@ public class Store {
     public void setDiscountsByDate(Map<LocalDate, Map<String, Discount>> discountsByDate) {
         this.discountsByDate = discountsByDate;
     }
+
+    public void addDiscounts(LocalDate date, Map<String, Discount> discounts) {
+        discountsByDate.put(date, discounts);
+    }
+
+    public void addProducts(LocalDate date, List<Product> products) {
+        productsByDate.put(date, products);
+    }
 }

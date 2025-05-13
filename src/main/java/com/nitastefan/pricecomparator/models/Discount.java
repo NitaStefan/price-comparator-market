@@ -36,4 +36,13 @@ public class Discount {
     public void setDiscountPercentage(byte discountPercentage) {
         this.discountPercentage = discountPercentage;
     }
+
+    @Override
+    public String toString() {
+        return "Discount{" +
+                "startDate=" + startDate +
+                ", endDate=" + endDate +
+                ", discountPercentage=" + discountPercentage +
+                '}';
+    }
 }

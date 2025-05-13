@@ -1,5 +1,6 @@
 package com.nitastefan.pricecomparator.utils;
 
+import com.nitastefan.pricecomparator.models.Discount;
 import com.nitastefan.pricecomparator.models.Product;
 
 import java.io.BufferedReader;
@@ -8,7 +9,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class CsvParser {
 
@@ -35,5 +38,31 @@ public class CsvParser {
         }
 
         return products;
+    }
+
+    public static Map<String, Discount> parseDiscounts(String filePath) throws IOException {
+        Map<String, Discount> productDiscount = new HashMap<>();
+
+        try (BufferedReader reader = Files.newBufferedReader(Path.of(filePath))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] columns = line.split(";");
+                if (columns.length == 9) {
+                    String productId = columns[0];
+                    String productName = columns[1];
+                    String productCategory = columns[2];
+                    String brand = columns[3];
+                    float packageQuantity = Float.parseFloat(columns[4]);
+                    String packageUnit = columns[5];
+                    LocalDate fromDate = LocalDate.parse(columns[6]);
+                    LocalDate toDate = LocalDate.parse(columns[7]);
+                    byte discountPercentage = Byte.parseByte(columns[8]);
+
+                    productDiscount.put(productId, new Discount(fromDate, toDate, discountPercentage));
+                }
+            }
+        }
+
+        return productDiscount;
     }
 }

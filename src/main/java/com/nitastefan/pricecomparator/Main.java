@@ -12,22 +12,40 @@ public class Main {
 //        app.get("/", ctx -> ctx.result("Hello World"))
 //                .start(7070);
 
+        StoreDao storeDao = storeSetup();
+
+    }
+
+    public static StoreDao storeSetup() throws IOException {
         String productsDir = Paths.get("src/main/resources/data/products/").toString();
+        String discountsDir = Paths.get("src/main/resources/data/discounts/").toString();
 
-        // Create the registry
-        StoreDao registry = new StoreDao();
+        StoreDao storeDao = new StoreDao();
 
-        // Load all stores
-        FileLoader.loadAllStores(registry, productsDir);
+        FileLoader.loadAllStoresData(storeDao, productsDir, discountsDir);
 
-        // Print the loaded stores
-        registry.getStores().forEach((name, store) -> {
+//        printAllStoresDate(storeDao);
+
+        return storeDao;
+    }
+
+    private static void printAllStoresDate(StoreDao storeDao) {
+        storeDao.getStores().forEach((name, store) -> {
             System.out.println("\nStore: " + name);
+
+            // Print products
             store.getProductsByDate().forEach((date, products) -> {
-                System.out.println("Date: " + date);
+                System.out.println("\nProducts for " + date + ":");
                 products.forEach(System.out::println);
             });
-        });
 
+            // Print discounts
+            store.getDiscountsByDate().forEach((date, discounts) -> {
+                System.out.println("\nDiscounts for " + date + ":");
+                discounts.forEach((productId, discount) -> {
+                    System.out.println("Product ID: " + productId + " -> " + discount);
+                });
+            });
+        });
     }
 }

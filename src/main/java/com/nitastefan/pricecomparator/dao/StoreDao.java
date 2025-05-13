@@ -1,11 +1,8 @@
 package com.nitastefan.pricecomparator.dao;
 
-import com.nitastefan.pricecomparator.models.Product;
 import com.nitastefan.pricecomparator.models.Store;
 
-import java.time.LocalDate;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class StoreDao {
@@ -30,7 +27,7 @@ public class StoreDao {
         stores.put(store.getName(), store);
     }
 
-    public Store getStore(String name) {
+    public Store getStoreByName(String name) {
         return stores.get(name);
     }
 
@@ -38,9 +35,5 @@ public class StoreDao {
         return stores.containsKey(name);
     }
 
-    public void addProductsFromDateToStore(String storeName, LocalDate date, List<Product> products) {
-        Store store = getStore(storeName);
 
-        store.getProductsByDate().put(date, products);
-    }
 }
