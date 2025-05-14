@@ -7,8 +7,9 @@ import java.util.TreeMap;
 
 public class Store {
     private String name;
-    private Map<LocalDate, List<Product>> productsByDate;
-    private Map<LocalDate, Map<String, Discount>> discountsByDate;
+    private TreeMap<LocalDate, List<Product>> productsByDate;
+    private TreeMap<LocalDate, Map<String, Discount>> discountsByDate;
+
 
     public Store(String name) {
         this.name = name;
@@ -28,7 +29,7 @@ public class Store {
         return productsByDate;
     }
 
-    public void setProductsByDate(Map<LocalDate, List<Product>> productsByDate) {
+    public void setProductsByDate(TreeMap<LocalDate, List<Product>> productsByDate) {
         this.productsByDate = productsByDate;
     }
 
@@ -36,7 +37,7 @@ public class Store {
         return discountsByDate;
     }
 
-    public void setDiscountsByDate(Map<LocalDate, Map<String, Discount>> discountsByDate) {
+    public void setDiscountsByDate(TreeMap<LocalDate, Map<String, Discount>> discountsByDate) {
         this.discountsByDate = discountsByDate;
     }
 
@@ -46,5 +47,14 @@ public class Store {
 
     public void addProducts(LocalDate date, List<Product> products) {
         productsByDate.put(date, products);
+    }
+
+    public List<Product> getCurrentlyAvailableProducts(LocalDate currentDate) {
+        var availableProducts = productsByDate.floorEntry(currentDate);
+
+        if (availableProducts == null) return List.of();
+
+        return availableProducts.getValue();
+
     }
 }
