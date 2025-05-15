@@ -1,24 +1,34 @@
 package com.nitastefan.pricecomparator.utils;
 
+import com.nitastefan.pricecomparator.dao.DiscountDao;
+import com.nitastefan.pricecomparator.dao.ProductDao;
+import com.nitastefan.pricecomparator.dao.StoreCatalogDao;
+import com.nitastefan.pricecomparator.keys.ProductStoreDateKey;
 import com.nitastefan.pricecomparator.models.Discount;
 import com.nitastefan.pricecomparator.models.Product;
+import com.nitastefan.pricecomparator.models.StoreCatalog;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 public class CsvParser {
 
-    public static List<Product> parseProducts(String filePath) throws IOException {
-        List<Product> products = new ArrayList<>();
+    public static void parseProducts(ProductDao productDao, StoreCatalogDao storeCatalogDao, Path file) throws IOException {
+        String fileName = file.getFileName().toString();
+        String[] parts = fileName.split("_");
 
-        try (BufferedReader reader = Files.newBufferedReader(Path.of(filePath))) {
+        //validate file name format
+        if (parts.length != 2)
+            throw new IllegalArgumentException("Invalid file name format: " + fileName);
+
+        String storeName = parts[0];
+        String dateString = parts[1].replace(".csv", "");
+        LocalDate date = LocalDate.parse(dateString);
+
+        try (BufferedReader reader = Files.newBufferedReader(Path.of(file.toString()))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 String[] columns = line.split(";");
@@ -32,18 +42,25 @@ public class CsvParser {
                     float price = Float.parseFloat(columns[6]);
                     String currency = columns[7];
 
-                    products.add(new Product(productId, productName, productCategory, brand, packageQuantity, packageUnit, price, currency));
+                    productDao.addProduct(productId, new Product(productName, productCategory, brand, packageQuantity, packageUnit));
+                    storeCatalogDao.addStoreCatalog(new ProductStoreDateKey(productId, storeName, date), new StoreCatalog(price, currency));
                 }
             }
         }
-
-        return products;
     }
 
-    public static Map<String, Discount> parseDiscounts(String filePath) throws IOException {
-        Map<String, Discount> productDiscount = new HashMap<>();
+    public static void parseDiscounts(DiscountDao discountDao, Path file) throws IOException {
+        String fileName = file.getFileName().toString();
+        String[] parts = fileName.split("_");
 
-        try (BufferedReader reader = Files.newBufferedReader(Path.of(filePath))) {
+        if (parts.length != 3 || !parts[1].equals("discounts"))
+            throw new IllegalArgumentException("Invalid discount file name format: " + fileName);
+
+        String storeName = parts[0];
+        String dateString = parts[2].replace(".csv", "");
+        LocalDate date = LocalDate.parse(dateString);
+
+        try (BufferedReader reader = Files.newBufferedReader(Path.of(file.toString()))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 String[] columns = line.split(";");
@@ -58,11 +75,9 @@ public class CsvParser {
                     LocalDate toDate = LocalDate.parse(columns[7]);
                     byte discountPercentage = Byte.parseByte(columns[8]);
 
-                    productDiscount.put(productId, new Discount(fromDate, toDate, discountPercentage));
+                    discountDao.addDiscount(new ProductStoreDateKey(productId, storeName, date), new Discount(fromDate, toDate, discountPercentage));
                 }
             }
         }
-
-        return productDiscount;
     }
 }

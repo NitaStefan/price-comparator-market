@@ -1,52 +1,50 @@
 package com.nitastefan.pricecomparator.models;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-
 import java.time.LocalDate;
 
 public class Discount {
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
-    private LocalDate startDate;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
-    private LocalDate endDate;
-    private byte discountPercentage;
+    private LocalDate fromDate;
 
-    public Discount(LocalDate startDate, LocalDate endDate, byte discountPercentage) {
-        this.startDate = startDate;
-        this.endDate = endDate;
-        this.discountPercentage = discountPercentage;
+    private LocalDate toDate;
+
+    byte percentage;
+
+    public Discount(LocalDate fromDate, LocalDate toDate, byte percentage) {
+        this.fromDate = fromDate;
+        this.toDate = toDate;
+        this.percentage = percentage;
     }
 
-    public LocalDate getStartDate() {
-        return startDate;
+    public LocalDate getFromDate() {
+        return fromDate;
     }
 
-    public void setStartDate(LocalDate startDate) {
-        this.startDate = startDate;
+    public void setFromDate(LocalDate fromDate) {
+        this.fromDate = fromDate;
     }
 
-    public LocalDate getEndDate() {
-        return endDate;
+    public LocalDate getToDate() {
+        return toDate;
     }
 
-    public void setEndDate(LocalDate endDate) {
-        this.endDate = endDate;
+    public void setToDate(LocalDate toDate) {
+        this.toDate = toDate;
     }
 
-    public byte getDiscountPercentage() {
-        return discountPercentage;
+    public byte getPercentage() {
+        return percentage;
     }
 
-    public void setDiscountPercentage(byte discountPercentage) {
-        this.discountPercentage = discountPercentage;
+    public void setPercentage(byte percentage) {
+        this.percentage = percentage;
     }
 
     @Override
     public String toString() {
         return "Discount{" +
-                "startDate=" + startDate +
-                ", endDate=" + endDate +
-                ", discountPercentage=" + discountPercentage +
+                "fromDate=" + fromDate +
+                ", toDate=" + toDate +
+                ", percentage=" + percentage +
                 '}';
     }
 }

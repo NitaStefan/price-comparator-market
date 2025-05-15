@@ -1,49 +1,34 @@
 package com.nitastefan.pricecomparator.models;
 
 public class Product {
-    private String productId;
-    private String productName;
-    private String productCategory;
+    private String name;
+    private String category;
     private String brand;
-    private float packageQuantity;
+    private float packageQty;
     private String packageUnit;
-    private float price;
-    private String currency;
 
-    public Product(String productId, String productName, String productCategory, String brand, float packageQuantity, String packageUnit, float price, String currency) {
-        this.productId = productId;
-        this.productName = productName;
-        this.productCategory = productCategory;
+    public Product(String name, String category, String brand, float packageQty, String packageUnit) {
+        this.name = name;
+        this.category = category;
         this.brand = brand;
-        this.packageQuantity = packageQuantity;
+        this.packageQty = packageQty;
         this.packageUnit = packageUnit;
-        this.price = price;
-        this.currency = currency;
     }
 
-    // Getters and Setters
-    public String getProductId() {
-        return productId;
+    public String getName() {
+        return name;
     }
 
-    public void setProductId(String productId) {
-        this.productId = productId;
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public String getProductName() {
-        return productName;
+    public String getCategory() {
+        return category;
     }
 
-    public void setProductName(String productName) {
-        this.productName = productName;
-    }
-
-    public String getProductCategory() {
-        return productCategory;
-    }
-
-    public void setProductCategory(String productCategory) {
-        this.productCategory = productCategory;
+    public void setCategory(String category) {
+        this.category = category;
     }
 
     public String getBrand() {
@@ -54,12 +39,12 @@ public class Product {
         this.brand = brand;
     }
 
-    public float getPackageQuantity() {
-        return packageQuantity;
+    public float getPackageQty() {
+        return packageQty;
     }
 
-    public void setPackageQuantity(float packageQuantity) {
-        this.packageQuantity = packageQuantity;
+    public void setPackageQty(float packageQty) {
+        this.packageQty = packageQty;
     }
 
     public String getPackageUnit() {
@@ -70,33 +55,14 @@ public class Product {
         this.packageUnit = packageUnit;
     }
 
-    public float getPrice() {
-        return price;
-    }
-
-    public void setPrice(float price) {
-        this.price = price;
-    }
-
-    public String getCurrency() {
-        return currency;
-    }
-
-    public void setCurrency(String currency) {
-        this.currency = currency;
-    }
-
     @Override
     public String toString() {
         return "Product{" +
-                "productId='" + productId + '\'' +
-                ", productName='" + productName + '\'' +
-                ", productCategory='" + productCategory + '\'' +
+                "name='" + name + '\'' +
+                ", category='" + category + '\'' +
                 ", brand='" + brand + '\'' +
-                ", packageQuantity=" + packageQuantity +
+                ", packageQty=" + packageQty +
                 ", packageUnit='" + packageUnit + '\'' +
-                ", price=" + price +
-                ", currency='" + currency + '\'' +
                 '}';
     }
 }
