@@ -9,6 +9,7 @@ import com.nitastefan.pricecomparator.utils.FileLoader;
 
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.time.LocalDate;
 
 public class Main {
     public static void main(String[] args) throws IOException {
@@ -25,7 +26,13 @@ public class Main {
 
         Controller controller = new Controller(service);
 
-        System.out.println(productDao);
 //        controller.startServer();
+
+        // Test the method
+        LocalDate currentDate = LocalDate.of(2025, 5, 9);
+        discountDao.computeAvailableDiscountDate(currentDate).forEach((store, date) -> {
+            System.out.println("Store: " + store + ", Latest Available Date: " + date);
+        });
     }
+
 }

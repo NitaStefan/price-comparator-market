@@ -3,26 +3,61 @@ package com.nitastefan.pricecomparator.dao;
 import com.nitastefan.pricecomparator.keys.ProductStoreDateKey;
 import com.nitastefan.pricecomparator.models.Discount;
 
-import java.util.Comparator;
-import java.util.TreeMap;
+import java.time.LocalDate;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class DiscountDao {
 
-    private TreeMap<ProductStoreDateKey, Discount> discounts;
+    private Map<ProductStoreDateKey, Discount> discounts;
 
     public DiscountDao() {
-        this.discounts = new TreeMap<>(Comparator.comparing(ProductStoreDateKey::date));
+        this.discounts = new HashMap<>();
     }
 
-    public TreeMap<ProductStoreDateKey, Discount> getAllDiscounts() {
+    public Map<ProductStoreDateKey, Discount> getAllDiscounts() {
         return discounts;
     }
 
-    public void setAllDiscounts(TreeMap<ProductStoreDateKey, Discount> discounts) {
+    public void setAllDiscounts(Map<ProductStoreDateKey, Discount> discounts) {
         this.discounts = discounts;
     }
 
     public void addDiscount(ProductStoreDateKey key, Discount discount) {
         discounts.put(key, discount);
+    }
+
+    public Map<String, LocalDate> computeAvailableDiscountDate(LocalDate currentDate) {
+        Map<String, List<LocalDate>> datesByStore = discounts.keySet().stream()
+                .collect(Collectors.groupingBy(
+                        ProductStoreDateKey::storeName,
+                        Collectors.mapping(ProductStoreDateKey::date, Collectors.toList())
+                ));
+
+        Map<String, LocalDate> latestAvailableDates = new HashMap<>();
+        datesByStore.forEach((store, dates) -> {
+            LocalDate latestDate = LocalDate.MIN;
+
+            for (LocalDate date : dates)
+                if (!date.isAfter(currentDate) && date.isAfter(latestDate))
+                    latestDate = date;
+
+            if (!latestDate.equals(LocalDate.MIN))
+                latestAvailableDates.put(store, latestDate);
+        });
+
+        return latestAvailableDates;
+    }
+
+    public Map<String, List<Map<String, Object>>> groupDiscountsByStore() {
+        return discounts.entrySet().stream()
+                .collect(Collectors.groupingBy(
+                        entry -> entry.getKey().storeName(),
+                        Collectors.mapping(entry -> Map.of(
+                                "productId", entry.getKey().productId(),
+                                "date", entry.getKey().date(),
+                                "discount", entry.getValue()
+                        ), Collectors.toList())
+                ));
     }
 }

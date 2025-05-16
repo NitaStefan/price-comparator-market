@@ -74,7 +74,7 @@ public class CsvParser {
                     LocalDate fromDate = LocalDate.parse(columns[6]);
                     LocalDate toDate = LocalDate.parse(columns[7]);
                     byte discountPercentage = Byte.parseByte(columns[8]);
-
+//                    System.out.println("Key( " + productId+", "+storeName +", "+date+") "+"Discount( "+fromDate+", "+toDate+", "+discountPercentage+")");
                     discountDao.addDiscount(new ProductStoreDateKey(productId, storeName, date), new Discount(fromDate, toDate, discountPercentage));
                 }
             }

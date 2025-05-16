@@ -3,22 +3,22 @@ package com.nitastefan.pricecomparator.dao;
 import com.nitastefan.pricecomparator.keys.ProductStoreDateKey;
 import com.nitastefan.pricecomparator.models.StoreCatalog;
 
-import java.util.Comparator;
-import java.util.TreeMap;
+import java.util.HashMap;
+import java.util.Map;
 
 public class StoreCatalogDao {
 
-    private TreeMap<ProductStoreDateKey, StoreCatalog> storeCatalogInfo;
+    private Map<ProductStoreDateKey, StoreCatalog> storeCatalogInfo;
 
     public StoreCatalogDao() {
-        this.storeCatalogInfo = new TreeMap<>(Comparator.comparing(ProductStoreDateKey::date));
+        this.storeCatalogInfo = new HashMap<>();
     }
 
-    public TreeMap<ProductStoreDateKey, StoreCatalog> getAllStoreCatalogInfo() {
+    public Map<ProductStoreDateKey, StoreCatalog> getAllStoreCatalogInfo() {
         return storeCatalogInfo;
     }
 
-    public void setAllStoreCatalogInfo(TreeMap<ProductStoreDateKey, StoreCatalog> storeCatalog) {
+    public void setAllStoreCatalogInfo(Map<ProductStoreDateKey, StoreCatalog> storeCatalog) {
         this.storeCatalogInfo = storeCatalog;
     }
 
