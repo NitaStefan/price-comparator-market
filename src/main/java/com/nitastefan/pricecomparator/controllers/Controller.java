@@ -1,7 +1,10 @@
 package com.nitastefan.pricecomparator.controllers;
 
+import com.nitastefan.pricecomparator.dto.ApiResponse;
 import com.nitastefan.pricecomparator.services.Service;
 import io.javalin.Javalin;
+
+import java.util.Set;
 
 public class Controller {
 
@@ -16,17 +19,7 @@ public class Controller {
 
         app.get("/", ctx -> ctx.result("Hello World"));
 
-//        app.get("/stores/{storeName}", ctx -> {
-//            String storeName = ctx.pathParam("storeName");
-//            storeName = StringUtils.capitalizeFirstLetter(storeName);
-//
-//            Store store = storeService.getStoreByName(storeName);
-//
-//            if (store == null)
-//                ctx.status(404).json(new ApiResponse<>("Store not found: " + storeName, null, false));
-//            else
-//                ctx.json(new ApiResponse<>("Store retrieved successfully", store, true));
-//        });
+        app.get("/test", ctx -> ctx.status(404).json(new ApiResponse<>("Error occurred", null, false)));
 //
 //        //set current date for simulation
 //        app.post("/date", ctx -> {
@@ -49,23 +42,23 @@ public class Controller {
 //            }
 //        });
 //
-//        app.get("/stores/{storeName}/available-products", ctx -> {
-//            try {
-//                String storeName = ctx.pathParam("storeName");
-//                storeName = StringUtils.capitalizeFirstLetter(storeName);
-//
-//                List<Product> products = storeService.getAvailableProductsFromStore(storeName);
-//
-//                if (products.isEmpty()) {
-//                    ctx.status(404).json(new ApiResponse<>("No available products found for store: " + storeName, null, false));
-//                } else {
-//                    ctx.json(new ApiResponse<>("Available products retrieved successfully", products, true));
-//                }
-//
-//            } catch (Exception e) {
-//                ctx.status(500).json(new ApiResponse<>("An unexpected error occurred", null, false));
-//            }
-//        });
+        app.get("/available-products", ctx -> {
+            try {
+                Set<String> productNames = service.getAvailableProductNames();
+                ctx.json(new ApiResponse<>("Available products retrieved successfully", productNames, true));
+            } catch (Exception e) {
+                ctx.status(500).json(new ApiResponse<>("An unexpected error occurred", null, false));
+            }
+        });
+
+        app.get("/best-deals", ctx -> {
+            try {
+                var bestDeals = service.getBestDeals();
+                ctx.json(new ApiResponse<>("Best deals retrieved successfully", bestDeals, true));
+            } catch (Exception e) {
+                ctx.status(500).json(new ApiResponse<>("An unexpected error occurred :" + e.getMessage(), null, false));
+            }
+        });
 
         app.start(7070);
     }

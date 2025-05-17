@@ -26,13 +26,9 @@ public class Main {
 
         Controller controller = new Controller(service);
 
-//        controller.startServer();
+        service.setCurrentDate(LocalDate.of(2025,4,30));
 
-        // Test the method
-        LocalDate currentDate = LocalDate.of(2025, 5, 9);
-        discountDao.computeAvailableDiscountDate(currentDate).forEach((store, date) -> {
-            System.out.println("Store: " + store + ", Latest Available Date: " + date);
-        });
+        controller.startServer();
     }
 
 }

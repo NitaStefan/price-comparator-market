@@ -3,8 +3,11 @@ package com.nitastefan.pricecomparator.dao;
 import com.nitastefan.pricecomparator.keys.ProductStoreDateKey;
 import com.nitastefan.pricecomparator.models.StoreCatalog;
 
+import java.time.LocalDate;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class StoreCatalogDao {
 
@@ -24,5 +27,52 @@ public class StoreCatalogDao {
 
     public void addStoreCatalog(ProductStoreDateKey key, StoreCatalog storeCatalog) {
         storeCatalogInfo.put(key, storeCatalog);
+    }
+
+    public Map<String, LocalDate> getCurrentDateOfProductsPerStore(LocalDate currentDate) {
+        Map<String, List<LocalDate>> datesByStore = storeCatalogInfo.keySet().stream()
+                .collect(Collectors.groupingBy(
+                        ProductStoreDateKey::storeName,
+                        Collectors.mapping(ProductStoreDateKey::date, Collectors.toList())
+                ));
+
+        Map<String, LocalDate> latestAvailableDates = new HashMap<>();
+        datesByStore.forEach((store, dates) -> {
+            LocalDate latestDate = LocalDate.MIN;
+
+            for (LocalDate date : dates)
+                if (!date.isAfter(currentDate) && date.isAfter(latestDate))
+                    latestDate = date;
+
+            if (!latestDate.equals(LocalDate.MIN))
+                latestAvailableDates.put(store, latestDate);
+        });
+
+        return latestAvailableDates;
+    }
+
+    /* Example Response:
+     * {
+     *     "P027": {
+     *         "price": 6.25,
+     *         "currency": "RON"
+     *     },
+     *     "P029": {
+     *         "price": 9.60,
+     *         "currency": "RON"
+     *     }
+     * }
+     */
+    public Map<String, Map<String, Object>> getProductsForStoreAndDate(String storeName, LocalDate date) {
+        return storeCatalogInfo.entrySet().stream()
+                .filter(entry -> entry.getKey().storeName().equals(storeName))
+                .filter(entry -> entry.getKey().date().equals(date))
+                .collect(Collectors.toMap(
+                        entry -> entry.getKey().productId(),
+                        entry -> Map.of(
+                                "price", entry.getValue().getPrice(),
+                                "currency", entry.getValue().getCurrency()
+                        )
+                ));
     }
 }

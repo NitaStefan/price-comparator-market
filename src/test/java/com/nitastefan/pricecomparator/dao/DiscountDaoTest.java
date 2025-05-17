@@ -34,7 +34,7 @@ public class DiscountDaoTest {
         LocalDate currentDate = LocalDate.of(2025, 5, 10);
 
         // When
-        Map<String, LocalDate> result = discountDao.computeAvailableDiscountDate(currentDate);
+        Map<String, LocalDate> result = discountDao.getAvailableDiscountDatePerStore(currentDate);
 
         // Then
         assertEquals(LocalDate.of(2025, 5, 8), result.get("Kaufland"));
@@ -49,7 +49,7 @@ public class DiscountDaoTest {
         LocalDate currentDate = LocalDate.of(2025, 5, 10);
 
         // When
-        Map<String, LocalDate> result = emptyDiscountDao.computeAvailableDiscountDate(currentDate);
+        Map<String, LocalDate> result = emptyDiscountDao.getAvailableDiscountDatePerStore(currentDate);
 
         // Then
         assertTrue(result.isEmpty());
@@ -61,7 +61,7 @@ public class DiscountDaoTest {
         LocalDate futureDate = LocalDate.of(2025, 5, 25);
 
         // When
-        Map<String, LocalDate> result = discountDao.computeAvailableDiscountDate(futureDate);
+        Map<String, LocalDate> result = discountDao.getAvailableDiscountDatePerStore(futureDate);
 
         // Then
         assertEquals(LocalDate.of(2025, 5, 11), result.get("Kaufland"));
@@ -76,7 +76,7 @@ public class DiscountDaoTest {
         LocalDate pastDate = LocalDate.of(2025, 4, 30);
 
         // When
-        Map<String, LocalDate> result = discountDao.computeAvailableDiscountDate(pastDate);
+        Map<String, LocalDate> result = discountDao.getAvailableDiscountDatePerStore(pastDate);
 
         // Then
         assertTrue(result.isEmpty());

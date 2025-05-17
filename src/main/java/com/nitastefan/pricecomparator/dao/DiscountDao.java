@@ -27,7 +27,7 @@ public class DiscountDao {
         discounts.put(key, discount);
     }
 
-    public Map<String, LocalDate> computeAvailableDiscountDate(LocalDate currentDate) {
+    public Map<String, LocalDate> getAvailableDiscountDatePerStore(LocalDate currentDate) {
         Map<String, List<LocalDate>> datesByStore = discounts.keySet().stream()
                 .collect(Collectors.groupingBy(
                         ProductStoreDateKey::storeName,
@@ -49,6 +49,18 @@ public class DiscountDao {
         return latestAvailableDates;
     }
 
+    /* Example Response:
+     * {
+     *     "kaufland": [{
+     *         "productId": "P001",
+     *         "date": "2025-05-01",
+     *         "discount": Discount
+     *     },
+     *      {...}
+     *     ],
+     *
+     * }
+     */
     public Map<String, List<Map<String, Object>>> groupDiscountsByStore() {
         return discounts.entrySet().stream()
                 .collect(Collectors.groupingBy(
