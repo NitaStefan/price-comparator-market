@@ -26,7 +26,7 @@ public class Main {
 
         Controller controller = new Controller(service);
 
-        service.setCurrentDate(LocalDate.of(2025,4,30));
+        service.setCurrentDate(LocalDate.of(2025,5,16));
 
         controller.startServer();
     }

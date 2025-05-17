@@ -2,7 +2,6 @@ package com.nitastefan.pricecomparator.dao;
 
 import com.nitastefan.pricecomparator.models.Product;
 
-import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;

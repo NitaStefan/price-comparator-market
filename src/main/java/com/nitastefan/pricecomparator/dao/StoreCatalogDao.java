@@ -51,28 +51,14 @@ public class StoreCatalogDao {
         return latestAvailableDates;
     }
 
-    /* Example Response:
-     * {
-     *     "P027": {
-     *         "price": 6.25,
-     *         "currency": "RON"
-     *     },
-     *     "P029": {
-     *         "price": 9.60,
-     *         "currency": "RON"
-     *     }
-     * }
-     */
-    public Map<String, Map<String, Object>> getProductsForStoreAndDate(String storeName, LocalDate date) {
+    //productId -> StoreCatalog - price, currency
+    public Map<String, StoreCatalog> getProductsForStoreAndDate(String storeName, LocalDate date) {
         return storeCatalogInfo.entrySet().stream()
                 .filter(entry -> entry.getKey().storeName().equals(storeName))
                 .filter(entry -> entry.getKey().date().equals(date))
                 .collect(Collectors.toMap(
                         entry -> entry.getKey().productId(),
-                        entry -> Map.of(
-                                "price", entry.getValue().getPrice(),
-                                "currency", entry.getValue().getCurrency()
-                        )
+                        entry -> new StoreCatalog(entry.getValue().getPrice(), entry.getValue().getCurrency())
                 ));
     }
 }

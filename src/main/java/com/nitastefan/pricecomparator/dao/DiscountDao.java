@@ -52,8 +52,7 @@ public class DiscountDao {
     /* Example Response:
      * {
      *     "kaufland": [{
-     *         "productId": "P001",
-     *         "date": "2025-05-01",
+     *         "PSDKey": ProductStoreDateKey
      *         "discount": Discount
      *     },
      *      {...}
@@ -66,10 +65,13 @@ public class DiscountDao {
                 .collect(Collectors.groupingBy(
                         entry -> entry.getKey().storeName(),
                         Collectors.mapping(entry -> Map.of(
-                                "productId", entry.getKey().productId(),
-                                "date", entry.getKey().date(),
+                                "PSDKey", entry.getKey(),
                                 "discount", entry.getValue()
                         ), Collectors.toList())
                 ));
+    }
+
+    public Discount getDiscount(ProductStoreDateKey key) {
+        return discounts.get(key);
     }
 }
