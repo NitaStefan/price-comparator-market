@@ -52,13 +52,14 @@ public class Service {
         return allAvailableProducts;
     }
 
-    //todo: check if there is a way to compute deals for the items from the basket
-    public Object getBestDeals(BasketFilter basketFilter) {
+    public Map<String, Object> getBestDeals(BasketFilter basketFilter) {
         List<ProductStoreDateKey> availableProductsCatalog = storeCatalogDao.getAvailableProductsKeys(currentDate);
 
         Map<String, LocalDate> storeDateDiscount = discountDao.getAvailableDiscountDatePerStore(currentDate);
 
         Map<String, Set<Map<String, Object>>> dealsByProductName = new HashMap<>();
+        Map<String, Float> totalPerStore = new HashMap<>();
+        Map<String, Integer> productCountPerStore = new HashMap<>();
 
         availableProductsCatalog.forEach(key -> {
             String storeName = key.storeName();
@@ -83,7 +84,10 @@ public class Service {
 
             float pricePerUnit = PriceCalculator.findPricePerUnit(price, product.getPackageQty(), product.getPackageUnit());
 
-            //todo: compute total for best deals and then per store per product name
+            if (basketFilter == BasketFilter.USE) {
+                totalPerStore.put(storeName, totalPerStore.getOrDefault(storeName, 0f) + price);
+                productCountPerStore.put(storeName, productCountPerStore.getOrDefault(storeName, 0) + 1);
+            }
 
             //in sorted order by pricePerUnit
             dealsByProductName.putIfAbsent(productName, new TreeSet<>(Comparator.comparingDouble(deal -> (float) deal.get("pricePerUnit"))));
@@ -102,7 +106,19 @@ public class Service {
             ));
         });
 
-        return dealsByProductName;
+        float totalForBestDeals = 0;
+        if (basketFilter == BasketFilter.USE)
+            totalForBestDeals = (float) dealsByProductName.values().stream()
+                    .mapToDouble(deals -> (float) ((TreeSet<Map<String, Object>>) deals).first().get("price"))
+                    .sum();
+
+        return Map.of(
+                "deals", dealsByProductName,
+                //add the following calculations only for products from the basket
+                "totalPerStore", totalPerStore.isEmpty() ? "null" : totalPerStore,
+                "totalForBestDeals", totalForBestDeals == 0 ? "null" : totalForBestDeals,
+                "productCountPerStore", productCountPerStore.isEmpty() ? "null" : productCountPerStore
+        );
     }
 
     public void establishBasket(List<String> productNames) {

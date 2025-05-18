@@ -48,7 +48,6 @@ public class StoreCatalogDao {
                 latestAvailableDates.add(new StoreDate(store, latestDate));
         });
 
-
         return storeCatalogInfo.keySet().stream()
                 .filter(key -> latestAvailableDates.contains(new StoreDate(key.storeName(), key.date())))
                 .collect(Collectors.toList());
