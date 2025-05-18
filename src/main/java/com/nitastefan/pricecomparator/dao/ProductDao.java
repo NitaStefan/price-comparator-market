@@ -26,14 +26,6 @@ public class ProductDao {
         products.put(id, product);
     }
 
-    public Set<String> getUniquesProductNames(Set<String> allAvailableProducts) {
-        Set<String> productNames = new HashSet<>();
-        allAvailableProducts.forEach(pId -> productNames.add(products.get(pId).getName()));
-
-        return productNames;
-    }
-
-
     public Product getProduct(String prodId) {
         return products.get(prodId);
     }

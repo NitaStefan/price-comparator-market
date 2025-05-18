@@ -2,6 +2,7 @@ package com.nitastefan.pricecomparator.controllers;
 
 import com.nitastefan.pricecomparator.dto.ApiResponse;
 import com.nitastefan.pricecomparator.services.Service;
+import com.nitastefan.pricecomparator.utils.BasketFilter;
 import io.javalin.Javalin;
 
 import java.util.Set;
@@ -51,10 +52,19 @@ public class Controller {
             }
         });
 
-        app.get("/best-deals", ctx -> {
+        app.get("/all-products/best-deals", ctx -> {
             try {
-                var bestDeals = service.getBestDeals();
-                ctx.json(new ApiResponse<>("Best deals retrieved successfully", bestDeals, true));
+                var bestDeals = service.getBestDeals(BasketFilter.NOT_USE);
+                ctx.json(new ApiResponse<>("Best deals of all products retrieved successfully", bestDeals, true));
+            } catch (Exception e) {
+                ctx.status(500).json(new ApiResponse<>("An unexpected error occurred :" + e.getMessage(), null, false));
+            }
+        });
+
+        app.get("/basket/best-deals", ctx -> {
+            try {
+                var bestDeals = service.getBestDeals(BasketFilter.USE);
+                ctx.json(new ApiResponse<>("Best deals for basket retrieved successfully", bestDeals, true));
             } catch (Exception e) {
                 ctx.status(500).json(new ApiResponse<>("An unexpected error occurred :" + e.getMessage(), null, false));
             }

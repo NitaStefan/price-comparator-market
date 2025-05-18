@@ -2,11 +2,10 @@ package com.nitastefan.pricecomparator.dao;
 
 import com.nitastefan.pricecomparator.keys.ProductStoreDateKey;
 import com.nitastefan.pricecomparator.models.StoreCatalog;
+import com.nitastefan.pricecomparator.models.StoreDate;
 
 import java.time.LocalDate;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class StoreCatalogDao {
@@ -29,14 +28,15 @@ public class StoreCatalogDao {
         storeCatalogInfo.put(key, storeCatalog);
     }
 
-    public Map<String, LocalDate> getCurrentDateOfProductsPerStore(LocalDate currentDate) {
-        Map<String, List<LocalDate>> datesByStore = storeCatalogInfo.keySet().stream()
+    public List<ProductStoreDateKey> getAvailableProductsKeys(LocalDate currentDate) {
+        Map<String, Set<LocalDate>> datesByStore = storeCatalogInfo.keySet().stream()
                 .collect(Collectors.groupingBy(
                         ProductStoreDateKey::storeName,
-                        Collectors.mapping(ProductStoreDateKey::date, Collectors.toList())
+                        Collectors.mapping(ProductStoreDateKey::date, Collectors.toSet())
                 ));
 
-        Map<String, LocalDate> latestAvailableDates = new HashMap<>();
+        Set<StoreDate> latestAvailableDates = new HashSet<>();
+
         datesByStore.forEach((store, dates) -> {
             LocalDate latestDate = LocalDate.MIN;
 
@@ -45,20 +45,16 @@ public class StoreCatalogDao {
                     latestDate = date;
 
             if (!latestDate.equals(LocalDate.MIN))
-                latestAvailableDates.put(store, latestDate);
+                latestAvailableDates.add(new StoreDate(store, latestDate));
         });
 
-        return latestAvailableDates;
+
+        return storeCatalogInfo.keySet().stream()
+                .filter(key -> latestAvailableDates.contains(new StoreDate(key.storeName(), key.date())))
+                .collect(Collectors.toList());
     }
 
-    //productId -> StoreCatalog - price, currency
-    public Map<String, StoreCatalog> getProductsForStoreAndDate(String storeName, LocalDate date) {
-        return storeCatalogInfo.entrySet().stream()
-                .filter(entry -> entry.getKey().storeName().equals(storeName))
-                .filter(entry -> entry.getKey().date().equals(date))
-                .collect(Collectors.toMap(
-                        entry -> entry.getKey().productId(),
-                        entry -> new StoreCatalog(entry.getValue().getPrice(), entry.getValue().getCurrency())
-                ));
+    public StoreCatalog getStoreCatalog(ProductStoreDateKey key) {
+        return storeCatalogInfo.get(key);
     }
 }

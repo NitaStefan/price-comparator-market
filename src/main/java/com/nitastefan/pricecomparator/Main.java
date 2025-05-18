@@ -10,6 +10,7 @@ import com.nitastefan.pricecomparator.utils.FileLoader;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.time.LocalDate;
+import java.util.List;
 
 public class Main {
     public static void main(String[] args) throws IOException {
@@ -26,7 +27,9 @@ public class Main {
 
         Controller controller = new Controller(service);
 
-        service.setCurrentDate(LocalDate.of(2025,5,16));
+        //test setup
+        service.setCurrentDate(LocalDate.of(2025,5,15));
+        service.establishBasket(List.of("piper negru măcinat", "morcovi","ciocolată neagră 70%"));
 
         controller.startServer();
     }
