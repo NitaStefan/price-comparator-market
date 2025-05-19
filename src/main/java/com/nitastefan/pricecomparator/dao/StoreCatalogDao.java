@@ -28,6 +28,15 @@ public class StoreCatalogDao {
         storeCatalogInfo.put(key, storeCatalog);
     }
 
+    public Map<String, TreeSet<LocalDate>> getSortedDatesByStore() {
+
+        return storeCatalogInfo.keySet().stream()
+                .collect(Collectors.groupingBy(
+                        ProductStoreDateKey::storeName,
+                        Collectors.mapping(ProductStoreDateKey::date, Collectors.toCollection(TreeSet::new))
+                ));
+    }
+
     public List<ProductStoreDateKey> getAvailableProductsKeys(LocalDate currentDate) {
         Map<String, Set<LocalDate>> datesByStore = storeCatalogInfo.keySet().stream()
                 .collect(Collectors.groupingBy(
@@ -50,6 +59,12 @@ public class StoreCatalogDao {
 
         return storeCatalogInfo.keySet().stream()
                 .filter(key -> latestAvailableDates.contains(new StoreDate(key.storeName(), key.date())))
+                .collect(Collectors.toList());
+    }
+
+    public List<ProductStoreDateKey> getCatalogKeysForStoreDate(StoreDate storeDate) {
+        return storeCatalogInfo.keySet().stream()
+                .filter(key -> Objects.equals(key.storeName(), storeDate.store()) && Objects.equals(key.date(), storeDate.date()))
                 .collect(Collectors.toList());
     }
 

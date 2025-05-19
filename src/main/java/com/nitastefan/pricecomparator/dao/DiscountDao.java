@@ -49,28 +49,6 @@ public class DiscountDao {
         return latestAvailableDates;
     }
 
-    /* Example Response:
-     * {
-     *     "kaufland": [{
-     *         "PSDKey": ProductStoreDateKey
-     *         "discount": Discount
-     *     },
-     *      {...}
-     *     ],
-     *
-     * }
-     */
-    public Map<String, List<Map<String, Object>>> groupDiscountsByStore() {
-        return discounts.entrySet().stream()
-                .collect(Collectors.groupingBy(
-                        entry -> entry.getKey().storeName(),
-                        Collectors.mapping(entry -> Map.of(
-                                "PSDKey", entry.getKey(),
-                                "discount", entry.getValue()
-                        ), Collectors.toList())
-                ));
-    }
-
     public Discount getDiscount(ProductStoreDateKey key) {
         return discounts.get(key);
     }

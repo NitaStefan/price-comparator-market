@@ -52,6 +52,7 @@ public class Controller {
             }
         });
 
+        //todo: change to best-deals/...
         app.get("/all-products/best-deals", ctx -> {
             try {
                 var bestDeals = service.getBestDeals(BasketFilter.NOT_USE);
@@ -65,6 +66,15 @@ public class Controller {
             try {
                 var bestDeals = service.getBestDeals(BasketFilter.USE);
                 ctx.json(new ApiResponse<>("Best deals for basket retrieved successfully", bestDeals, true));
+            } catch (Exception e) {
+                ctx.status(500).json(new ApiResponse<>("An unexpected error occurred :" + e.getMessage(), null, false));
+            }
+        });
+
+        app.get("/product-timeline", ctx -> {
+            try {
+                var productTimeline = service.getPriceTimeline();
+                ctx.json(new ApiResponse<>("Product timeline retrieved successfully", productTimeline, true));
             } catch (Exception e) {
                 ctx.status(500).json(new ApiResponse<>("An unexpected error occurred :" + e.getMessage(), null, false));
             }
