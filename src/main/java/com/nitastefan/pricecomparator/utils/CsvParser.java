@@ -69,7 +69,7 @@ public class CsvParser {
                     String productName = columns[1];
                     String productCategory = columns[2];
                     String brand = columns[3];
-                    float packageQuantity = Float.parseFloat(columns[4]);
+                    String packageQuantity = columns[4];
                     String packageUnit = columns[5];
                     LocalDate fromDate = LocalDate.parse(columns[6]);
                     LocalDate toDate = LocalDate.parse(columns[7]);

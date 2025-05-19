@@ -52,6 +52,31 @@ public class Service {
         return allAvailableProducts;
     }
 
+    public List<Map<String, Object>> getLatestDiscounts(int lastDays) {
+        List<ProductStoreDateKey> availableDiscountKeys = discountDao.getAvailableDiscountKeys(currentDate);
+        List<Map<String, Object>> result = new ArrayList<>();
+
+        //eventually get date of the current catalog to get the price
+        availableDiscountKeys.forEach(key -> {
+            Discount discount = discountDao.getDiscount(key);
+            Product product = productDao.getProduct(key.productId());
+
+            if (discount.getFromDate().isAfter(currentDate.minusDays(lastDays)) && !discount.getFromDate().isAfter(currentDate)) {
+                result.add(Map.of(
+                        "store", key.storeName(),
+                        "productName", product.getName(),
+                        "discountPercentage", discount.getPercentage(),
+                        "discountStartDate", discount.getFromDate().toString(),
+                        "brand", product.getBrand(),
+                        "qty", product.getPackageQty(),
+                        "unit", product.getPackageUnit()
+                ));
+            }
+        });
+
+        return result;
+    }
+
     public Map<String, Object> getBestDeals(BasketFilter basketFilter) {
         List<ProductStoreDateKey> availableProductsCatalog = storeCatalogDao.getAvailableProductsKeys(currentDate);
         Map<String, LocalDate> storeDateDiscount = discountDao.getAvailableDiscountDatePerStore(currentDate);
@@ -179,6 +204,7 @@ public class Service {
 
                         result.get(product.getName()).get(store).add(secondInterval);
 
+                        //in case the discount does not cover the whole interval
                         if (discount.getToDate().isBefore(endDate)) {
                             Map<String, Object> thirdInterval = Map.of(
                                     "from", discount.getToDate().plusDays(1).toString(),

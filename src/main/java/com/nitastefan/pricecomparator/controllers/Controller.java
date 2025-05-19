@@ -52,6 +52,17 @@ public class Controller {
             }
         });
 
+        app.get("/latest-discounts", ctx -> {
+            try {
+                String lastDaysParam = ctx.queryParam("lastDays");
+                int lastDays = lastDaysParam == null ? 1 : Integer.parseInt(lastDaysParam);
+                var latestDiscounts = service.getLatestDiscounts(lastDays);
+                ctx.json(new ApiResponse<>("Latest discounts retrieved successfully", latestDiscounts, true));
+            } catch (Exception e) {
+                ctx.status(500).json(new ApiResponse<>("An unexpected error occurred", null, false));
+            }
+        });
+
         //todo: change to best-deals/...
         app.get("/all-products/best-deals", ctx -> {
             try {
