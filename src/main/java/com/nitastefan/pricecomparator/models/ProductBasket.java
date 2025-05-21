@@ -21,4 +21,8 @@ public class ProductBasket {
     public boolean contains(String productName){
         return productNames.contains(productName);
     }
+
+    public Set<String> getProductNames() {
+        return productNames;
+    }
 }

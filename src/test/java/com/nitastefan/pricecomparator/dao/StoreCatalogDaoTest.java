@@ -2,16 +2,14 @@ package com.nitastefan.pricecomparator.dao;
 
 import com.nitastefan.pricecomparator.keys.ProductStoreDateKey;
 import com.nitastefan.pricecomparator.models.StoreCatalog;
+import com.nitastefan.pricecomparator.models.StoreDate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class StoreCatalogDaoTest {
 
@@ -27,66 +25,80 @@ public class StoreCatalogDaoTest {
         storeCatalogDao.addStoreCatalog(new ProductStoreDateKey("P005", "lidl", LocalDate.of(2025, 5, 4)), new StoreCatalog(9.0f, "RON"));
         storeCatalogDao.addStoreCatalog(new ProductStoreDateKey("P006", "profi", LocalDate.of(2025, 5, 5)), new StoreCatalog(12.0f, "RON"));
         storeCatalogDao.addStoreCatalog(new ProductStoreDateKey("P007", "profi", LocalDate.of(2025, 5, 5)), new StoreCatalog(11.0f, "RON"));
-        storeCatalogDao.addStoreCatalog(new ProductStoreDateKey("P008", "mega_mage", LocalDate.of(2025, 5, 20)), new StoreCatalog(25.0f, "RON"));
+        storeCatalogDao.addStoreCatalog(new ProductStoreDateKey("P008", "mega_image", LocalDate.of(2025, 5, 20)), new StoreCatalog(25.0f, "RON"));
     }
-
 
     @Test
-    void givenCurrentDate_whenComputingAvailableDates_thenReturnsCorrectDates() {
-        // Given
-        LocalDate currentDate = LocalDate.of(2025, 5, 10);
+    void givenCurrentDate_whenGettingAvailableProductKeys_thenReturnsMostRecentPerStore() {
+        LocalDate currentDate = LocalDate.of(2025, 5, 11);
 
-        // When
         List<ProductStoreDateKey> result = storeCatalogDao.getAvailableProductsKeys(currentDate);
 
-        // Convert to Map for easier assertions
-        Map<String, LocalDate> resultMap = result.stream()
-                .collect(Collectors.toMap(ProductStoreDateKey::storeName, ProductStoreDateKey::date, (existing, replacement) -> existing));
-
-        // Then
-        assertEquals(LocalDate.of(2025, 5, 8), resultMap.get("kaufland"));
-        assertEquals(LocalDate.of(2025, 5, 4), resultMap.get("lidl"));
-        assertEquals(LocalDate.of(2025, 5, 5), resultMap.get("profi"));
+        assertEquals(4, result.size());
+        assertTrue(result.contains(new ProductStoreDateKey("P003", "kaufland", LocalDate.of(2025, 5, 11))));
+        assertTrue(result.contains(new ProductStoreDateKey("P005", "lidl", LocalDate.of(2025, 5, 4))));
+        assertTrue(result.contains(new ProductStoreDateKey("P006", "profi", LocalDate.of(2025, 5, 5))) ||
+                result.contains(new ProductStoreDateKey("P007", "profi", LocalDate.of(2025, 5, 5))));
     }
 
-//    @Test
-//    void givenEmptyDao_whenComputingAvailableDates_thenReturnsEmptyMap() {
-//        // Given
-//        StoreCatalogDao emptyStoreCatalogDao = new StoreCatalogDao();
-//        LocalDate currentDate = LocalDate.of(2025, 5, 10);
-//
-//        // When
-//        Map<String, LocalDate> result = emptyStoreCatalogDao.getCurrentDateOfProductsPerStore(currentDate);
-//
-//        // Then
-//        assertTrue(result.isEmpty());
-//    }
-//
-//    @Test
-//    void givenFutureDate_whenComputingAvailableDates_thenReturnsLatestDates() {
-//        // Given
-//        LocalDate futureDate = LocalDate.of(2025, 5, 25);
-//
-//        // When
-//        Map<String, LocalDate> result = storeCatalogDao.getCurrentDateOfProductsPerStore(futureDate);
-//
-//        // Then
-//        assertEquals(LocalDate.of(2025, 5, 11), result.get("Kaufland"));
-//        assertEquals(LocalDate.of(2025, 5, 4), result.get("Lidl"));
-//        assertEquals(LocalDate.of(2025, 5, 5), result.get("Profi"));
-//        assertEquals(LocalDate.of(2025, 5, 20), result.get("MegaImage"));
-//    }
-//
-//    @Test
-//    void givenPastDate_whenComputingAvailableDates_thenReturnsEmptyMap() {
-//        // Given
-//        LocalDate pastDate = LocalDate.of(2025, 4, 30);
-//
-//        // When
-//        Map<String, LocalDate> result = storeCatalogDao.getCurrentDateOfProductsPerStore(pastDate);
-//
-//        // Then
-//        assertTrue(result.isEmpty());
-//    }
+    @Test
+    void givenFutureDate_whenGettingAvailableProductKeys_thenReturnsAllLatestPerStore() {
+        LocalDate currentDate = LocalDate.of(2025, 5, 30);
 
+        List<ProductStoreDateKey> result = storeCatalogDao.getAvailableProductsKeys(currentDate);
+
+        assertEquals(5, result.size());
+        assertTrue(result.contains(new ProductStoreDateKey("P003", "kaufland", LocalDate.of(2025, 5, 11))));
+        assertTrue(result.contains(new ProductStoreDateKey("P005", "lidl", LocalDate.of(2025, 5, 4))));
+        assertTrue(result.contains(new ProductStoreDateKey("P008", "mega_image", LocalDate.of(2025, 5, 20))));
+    }
+
+    @Test
+    void givenPastDate_whenGettingAvailableProductKeys_thenReturnsEmptyList() {
+        LocalDate currentDate = LocalDate.of(2025, 4, 30);
+
+        List<ProductStoreDateKey> result = storeCatalogDao.getAvailableProductsKeys(currentDate);
+
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void givenEmptyCatalog_whenGettingAvailableProductKeys_thenReturnsEmptyList() {
+        StoreCatalogDao emptyDao = new StoreCatalogDao();
+        LocalDate currentDate = LocalDate.of(2025, 5, 10);
+
+        List<ProductStoreDateKey> result = emptyDao.getAvailableProductsKeys(currentDate);
+
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void givenValidStoreDate_whenGettingCatalogKeys_thenReturnsCorrectKeys() {
+        StoreDate storeDate = new StoreDate("kaufland", LocalDate.of(2025, 5, 8));
+
+        List<ProductStoreDateKey> result = storeCatalogDao.getCatalogKeysForStoreDate(storeDate);
+
+        assertEquals(1, result.size());
+        assertEquals("P002", result.getFirst().productId());
+    }
+
+    @Test
+    void givenInvalidStoreDate_whenGettingCatalogKeys_thenReturnsEmptyList() {
+        StoreDate storeDate = new StoreDate("lidl", LocalDate.of(2024, 5, 5));
+
+        List<ProductStoreDateKey> result = storeCatalogDao.getCatalogKeysForStoreDate(storeDate);
+
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void givenMultipleProductsSameStoreAndDate_whenGettingCatalogKeys_thenReturnsAllMatching() {
+        StoreDate storeDate = new StoreDate("profi", LocalDate.of(2025, 5, 5));
+
+        List<ProductStoreDateKey> result = storeCatalogDao.getCatalogKeysForStoreDate(storeDate);
+
+        assertEquals(2, result.size());
+        assertTrue(result.stream().anyMatch(key -> key.productId().equals("P006")));
+        assertTrue(result.stream().anyMatch(key -> key.productId().equals("P007")));
+    }
 }

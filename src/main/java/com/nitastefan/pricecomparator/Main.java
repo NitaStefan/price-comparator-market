@@ -28,8 +28,8 @@ public class Main {
         Controller controller = new Controller(service);
 
         //test setup
-        service.setCurrentDate(LocalDate.of(2025,5,10));
-        service.establishBasket(List.of("piper negru măcinat", "morcovi","ciocolată neagră 70%"));
+        service.setCurrentDate(LocalDate.of(2025,5,21));
+        service.establishBasket(List.of("piper negru măcinat", "morcovi","ciocolată neagră 70%", "șampon păr gras"));
 
         controller.startServer();
     }

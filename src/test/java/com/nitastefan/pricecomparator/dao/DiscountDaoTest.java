@@ -6,7 +6,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -77,6 +79,70 @@ public class DiscountDaoTest {
 
         // When
         Map<String, LocalDate> result = discountDao.getAvailableDiscountDatePerStore(pastDate);
+
+        // Then
+        assertTrue(result.isEmpty());
+    }
+
+
+    @Test
+    void givenCurrentDate_whenGettingAvailableDiscountKeys_thenReturnsCorrectKeys() {
+        // Given
+        LocalDate currentDate = LocalDate.of(2025, 5, 10);
+
+        // When
+        List<ProductStoreDateKey> result = discountDao.getAvailableDiscountKeys(currentDate);
+
+        // Then
+        List<String> expectedKeys = List.of("P002-Kaufland-2025-05-08", "P005-Lidl-2025-05-04", "P006-Profi-2025-05-05", "P007-Profi-2025-05-05");
+        List<String> actualKeys = result.stream()
+                .map(key -> String.format("%s-%s-%s", key.productId(), key.storeName(), key.date()))
+                .toList();
+
+        assertEquals(expectedKeys.size(), actualKeys.size());
+        assertTrue(actualKeys.containsAll(expectedKeys));
+    }
+
+    @Test
+    void givenPastDate_whenGettingAvailableDiscountKeys_thenReturnsEmptyList() {
+        // Given
+        LocalDate currentDate = LocalDate.of(2025, 4, 30);
+
+        // When
+        List<ProductStoreDateKey> result = discountDao.getAvailableDiscountKeys(currentDate);
+
+        // Then
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void givenFutureDate_whenGettingAvailableDiscountKeys_thenReturnsAllLatestPerStore() {
+        // Given
+        LocalDate currentDate = LocalDate.of(2025, 5, 21);
+
+        // When
+        List<ProductStoreDateKey> result = discountDao.getAvailableDiscountKeys(currentDate);
+
+        // Then
+        List<String> expectedKeys = List.of("P003-Kaufland-2025-05-11", "P005-Lidl-2025-05-04",
+                "P006-Profi-2025-05-05", "P007-Profi-2025-05-05", "P008-MegaImage-2025-05-20");
+
+        List<String> actualKeys = result.stream()
+                .map(key -> String.format("%s-%s-%s", key.productId(), key.storeName(), key.date()))
+                .toList();
+
+        assertEquals(expectedKeys.size(), actualKeys.size());
+        assertTrue(actualKeys.containsAll(expectedKeys));
+    }
+
+    @Test
+    void givenEmptyDao_whenGettingAvailableDiscountKeys_thenReturnsEmptyList() {
+        // Given
+        DiscountDao emptyDiscountDao = new DiscountDao();
+        LocalDate currentDate = LocalDate.of(2025, 5, 10);
+
+        // When
+        List<ProductStoreDateKey> result = emptyDiscountDao.getAvailableDiscountKeys(currentDate);
 
         // Then
         assertTrue(result.isEmpty());
