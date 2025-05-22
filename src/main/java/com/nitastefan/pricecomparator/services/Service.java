@@ -95,110 +95,81 @@ public class Service {
         return result;
     }
 
-//    public Map<String, Object> getBestDeals(BasketFilter basketFilter) {
-//        List<ProductStoreDateKey> availableProductsCatalog = storeCatalogDao.getAvailableProductsKeys(currentDate);
-//        Map<String, LocalDate> storeDateDiscount = discountDao.getAvailableDiscountDatePerStore(currentDate);
-//
-//        Map<String, Set<Map<String, Object>>> dealsByProductName = new HashMap<>();
-//        Map<String, Float> totalPerStore = new HashMap<>();
-//        Map<String, Integer> productCountPerStore = new HashMap<>();
-//
-//        availableProductsCatalog.forEach(key -> {
-//            String storeName = key.storeName();
-//            String productId = key.productId();
-//            StoreCatalog storeCatalog = storeCatalogDao.getStoreCatalog(key);
-//            Product product = productDao.getProduct(productId);
-//            String productName = product.getName();
-//            float price = storeCatalog.getPrice();
-//
-//            //apply basket filtering if requested
-//            if (basketFilter == BasketFilter.USE && !productBasket.contains(productName)) return;
-//
-//            //check if there is a discount that applies
-//            LocalDate availableDiscountDate = storeDateDiscount.get(storeName);
-//            ProductStoreDateKey psdKey = new ProductStoreDateKey(productId, storeName, availableDiscountDate);
-//            Discount discount = discountDao.getDiscount(psdKey);
-//
-//            boolean isDiscountApplied = PriceCalculator.isDiscountApplied(discount, currentDate);
-//            if (isDiscountApplied)
-//                price = PriceCalculator.applyDiscount(price, discount.getPercentage());
-//
-//            float pricePerUnit = PriceCalculator.findPricePerUnit(price, product.getPackageQty(), product.getPackageUnit());
-//
-//            if (basketFilter == BasketFilter.USE) {
-//                totalPerStore.put(storeName, totalPerStore.getOrDefault(storeName, 0f) + price);
-//                productCountPerStore.put(storeName, productCountPerStore.getOrDefault(storeName, 0) + 1);
-//            }
-//
-//            //in sorted order by pricePerUnit
-//            dealsByProductName.putIfAbsent(productName, new TreeSet<>(Comparator.comparingDouble(deal -> (float) deal.get("pricePerUnit"))));
-//
-//            dealsByProductName.get(productName).add(Map.of(
-//                    "storeName", storeName,
-//                    "pricePerUnit", pricePerUnit,
-//                    "price", price,
-//                    "currency", storeCatalog.getCurrency(),
-//                    "quantity", product.getPackageQty(),
-//                    "unit", product.getPackageUnit(),
-//                    "brand", product.getBrand(),
-//                    "standardUnit", Unit.getStandard(product.getPackageUnit()),
-//                    "isDiscountApplied", isDiscountApplied,
-//                    "discount", discount != null ? discount : "null"
-//            ));
-//        });
-//
-//        float totalForBestDeals = 0;
-//        if (basketFilter == BasketFilter.USE)
-//            totalForBestDeals = (float) dealsByProductName.values().stream()
-//                    .mapToDouble(deals -> (float) ((TreeSet<Map<String, Object>>) deals).first().get("price"))
-//                    .sum();
-//
-//        return Map.of(
-//                "deals", dealsByProductName,
-//                //add the following calculations only for products from the basket
-//                "totalPerStore", totalPerStore.isEmpty() ? "null" : totalPerStore,
-//                "totalForBestDeals", totalForBestDeals == 0 ? "null" : totalForBestDeals,
-//                "productCountPerStore", productCountPerStore.isEmpty() ? "null" : productCountPerStore
-//        );
-//    }
-
     public Map<String, Object> getBestDeals(BasketFilter basketFilter) {
         List<ProductStoreDateKey> availableCatalog = storeCatalogDao.getAvailableProductsKeys(currentDate);
-        Map<String, LocalDate> storeDiscountDates = discountDao.getAvailableDiscountDatePerStore(currentDate);
+        Map<String, LocalDate> storeDiscountDate = discountDao.getAvailableDiscountDatePerStore(currentDate);
 
-        Map<String, Set<Map<String, Object>>> dealsByProduct = buildDealsByProduct(availableCatalog, storeDiscountDates, basketFilter);
+        Map<String, Set<Map<String, Object>>> dealsByProductName = new HashMap<>();
 
-        Float totalForBestDeals = basketFilter == BasketFilter.USE ? calculateBestDealTotal(dealsByProduct) : null;
-//        Map<String, Float> totalPerStore = basketFilter == BasketFilter.USE ? calculateTotalPerStore(dealsByProduct) : null;
-//        Map<String, Integer> productCountPerStore = basketFilter == BasketFilter.USE ? calculateProductCountPerStore(dealsByProduct) : null;
+        for (ProductStoreDateKey key : availableCatalog) {
+            StoreCatalog storeCatalog = storeCatalogDao.getStoreCatalog(key);
+            Product product = productDao.getProduct(key.productId());
+            float price = storeCatalog.getPrice();
+
+            //apply basket filtering if requested
+            if (basketFilter == BasketFilter.USE && !productBasket.contains(product.getName()))
+                continue;
+
+            //check if there is a discount that applies
+            LocalDate currentDiscountDate = storeDiscountDate.get(key.storeName());
+            ProductStoreDateKey psdKey = new ProductStoreDateKey(key.productId(), key.storeName(), currentDiscountDate);
+            Discount discount = discountDao.getDiscount(psdKey);
+
+            //discount is applied if it's not null and currently active (within date range)
+            boolean hasDiscount = PriceCalculator.isDiscountApplied(discount, currentDate);
+            if (hasDiscount)
+                price = PriceCalculator.applyDiscount(price, discount.getPercentage());
+
+            //calculate price per standard unit (e.g., 12 RON for 500g becomes 24 RON/kg)
+            float pricePerUnit = PriceCalculator.findPricePerUnit(price, product.getPackageQty(), product.getPackageUnit());
+
+            //in sorted order by pricePerUnit (best deal to worst deal)
+            dealsByProductName.putIfAbsent(product.getName(), new TreeSet<>(Comparator.comparingDouble(deal -> (float) deal.get("pricePerUnit"))));
+
+            dealsByProductName.get(product.getName()).add(Map.of(
+                    "storeName", key.storeName(),
+                    "pricePerUnit", pricePerUnit,
+                    "price", price,
+                    "currency", storeCatalog.getCurrency(),
+                    "quantity", product.getPackageQty(),
+                    "unit", product.getPackageUnit(),
+                    "brand", product.getBrand(),
+                    "standardUnit", Unit.getStandard(product.getPackageUnit()),
+                    "isDiscountApplied", hasDiscount,
+                    "discount", discount != null ? discount : "null"
+            ));
+        }
+        ;
+
+        float totalForBestDeals = 0;
+        if (basketFilter == BasketFilter.USE)
+            totalForBestDeals = (float) dealsByProductName.values().stream()
+                    .mapToDouble(deals -> (float) ((TreeSet<Map<String, Object>>) deals).first().get("price")).sum();
 
         return Map.of(
-                "deals", dealsByProduct,
-                "totalForBestDeals", totalForBestDeals == null ? "null" : totalForBestDeals
-//                "totalPerStore", totalPerStore == null ? "null" : totalPerStore,
-//                "productCountPerStore", productCountPerStore == null ? "null" : productCountPerStore
+                "deals", dealsByProductName,
+                //if showing deals from the basket, also add the total for the best deals
+                "totalForBestDeals", totalForBestDeals == 0 ? "null" : totalForBestDeals
         );
     }
 
-    private Map<String, Set<Map<String, Object>>> buildDealsByProduct(
-            List<ProductStoreDateKey> availableCatalog,
-            Map<String, LocalDate> storeDiscountDates,
-            BasketFilter basketFilter
-    ) {
-        Map<String, Set<Map<String, Object>>> deals = new HashMap<>();
+    public Map<String, Map<String, Object>> getBasketDealsByStore() {
+        List<ProductStoreDateKey> availableCatalog = storeCatalogDao.getAvailableProductsKeys(currentDate);
+        Map<String, LocalDate> storeDiscountDate = discountDao.getAvailableDiscountDatePerStore(currentDate);
+
+        Map<String, Map<String, Object>> dealsByStore = new HashMap<>();
 
         for (ProductStoreDateKey key : availableCatalog) {
             String store = key.storeName();
             String productId = key.productId();
 
             Product product = productDao.getProduct(productId);
-            String name = product.getName();
             StoreCatalog catalog = storeCatalogDao.getStoreCatalog(key);
             float price = catalog.getPrice();
 
-            if (basketFilter == BasketFilter.USE && !productBasket.contains(name)) continue;
+            if (!productBasket.contains(product.getName())) continue;
 
-            LocalDate discountDate = storeDiscountDates.get(store);
+            LocalDate discountDate = storeDiscountDate.get(store);
             Discount discount = discountDao.getDiscount(new ProductStoreDateKey(productId, store, discountDate));
             boolean hasDiscount = PriceCalculator.isDiscountApplied(discount, currentDate);
 
@@ -207,10 +178,10 @@ public class Service {
 
             float pricePerUnit = PriceCalculator.findPricePerUnit(price, product.getPackageQty(), product.getPackageUnit());
 
-            deals.putIfAbsent(name, new TreeSet<>(Comparator.comparingDouble(d -> (float) d.get("pricePerUnit"))));
+            dealsByStore.putIfAbsent(store, new HashMap<>());
+            dealsByStore.get(store).put("total", (float) dealsByStore.get(store).getOrDefault("total", 0f) + price);
 
-            Map<String, Object> deal = Map.of(
-                    "storeName", store,
+            dealsByStore.get(store).put(product.getName(), Map.of(
                     "price", price,
                     "pricePerUnit", pricePerUnit,
                     "currency", catalog.getCurrency(),
@@ -220,47 +191,11 @@ public class Service {
                     "standardUnit", Unit.getStandard(product.getPackageUnit()),
                     "isDiscountApplied", hasDiscount,
                     "discount", discount != null ? discount : "null"
-            );
-
-            deals.get(name).add(deal);
+            ));
         }
 
-        return deals;
+        return dealsByStore;
     }
-
-    //todo: create separate method that groups deals by store
-
-    private Float calculateBestDealTotal(Map<String, Set<Map<String, Object>>> dealsByProduct) {
-        return (float) dealsByProduct.values().stream()
-                .map(deals -> ((TreeSet<Map<String, Object>>) deals).first())
-                .mapToDouble(d -> (float) d.get("price"))
-                .sum();
-    }
-
-//    private Map<String, Float> calculateTotalPerStore(Map<String, Set<Map<String, Object>>> dealsByProduct) {
-//        Map<String, Float> totals = new HashMap<>();
-//
-//        for (Set<Map<String, Object>> productDeals : dealsByProduct.values()) {
-//            Map<String, Object> best = ((TreeSet<Map<String, Object>>) productDeals).first();
-//            String store = (String) best.get("storeName");
-//            float price = (float) best.get("price");
-//            totals.put(store, totals.getOrDefault(store, 0f) + price);
-//        }
-//
-//        return totals;
-//    }
-//
-//    private Map<String, Integer> calculateProductCountPerStore(Map<String, Set<Map<String, Object>>> dealsByProduct) {
-//        Map<String, Integer> counts = new HashMap<>();
-//
-//        for (Set<Map<String, Object>> productDeals : dealsByProduct.values()) {
-//            Map<String, Object> best = ((TreeSet<Map<String, Object>>) productDeals).first();
-//            String store = (String) best.get("storeName");
-//            counts.put(store, counts.getOrDefault(store, 0) + 1);
-//        }
-//
-//        return counts;
-//    }
 
     //other variations can be written
     public Map<String, Map<String, List<Object>>> getPriceTimeline() {
@@ -269,23 +204,25 @@ public class Service {
         Map<String, Map<String, List<Object>>> result = new HashMap<>();
 
         catalogSortedDates.forEach((store, catalogDates) -> {
+            //create a sorted list to be able to access current and next date by index
             List<LocalDate> dateList = new ArrayList<>(catalogDates);
 
             for (int i = 0; i < dateList.size(); i++) {
                 LocalDate startDate = dateList.get(i);
+                LocalDate defaultEndDate = startDate.plusWeeks(2);
                 //treat endDate as inclusive
-                LocalDate endDate = i + 1 != dateList.size() ? dateList.get(i + 1).minusDays(1) : startDate.plusWeeks(2);
+                LocalDate endDate = i + 1 != dateList.size() ? dateList.get(i + 1).minusDays(1) : defaultEndDate;
 
+                //get all available products from a store listed on a specific date
                 StoreDate storeDate = new StoreDate(store, startDate);
                 List<ProductStoreDateKey> catalogKeys = storeCatalogDao.getCatalogKeysForStoreDate(storeDate);
 
                 catalogKeys.forEach(catalogKey -> {
                     StoreCatalog catalog = storeCatalogDao.getStoreCatalog(catalogKey);
-                    float price = catalog.getPrice();
-                    String currency = catalog.getCurrency();
                     Product product = productDao.getProduct(catalogKey.productId());
-                    Map<String, LocalDate> storeDateDiscount = discountDao.getAvailableDiscountDatePerStore(endDate);
-                    LocalDate discountDate = storeDateDiscount.get(catalogKey.storeName());
+
+                    //get the available discount date that applies on endDate to check price between startDate and endDate
+                    LocalDate discountDate = discountDao.getAvailableDiscountDateForStore(endDate, catalogKey.storeName());
 
                     ProductStoreDateKey discountKey = new ProductStoreDateKey(catalogKey.productId(), catalogKey.storeName(), discountDate);
                     Discount discount = discountDao.getDiscount(discountKey);
@@ -293,19 +230,20 @@ public class Service {
                     result.putIfAbsent(product.getName(), new HashMap<>());
                     result.get(product.getName()).putIfAbsent(store, new ArrayList<>());
 
-                    float pricePerUnit = PriceCalculator.findPricePerUnit(price, product.getPackageQty(), product.getPackageUnit());
+                    float pricePerUnit = PriceCalculator.findPricePerUnit(catalog.getPrice(), product.getPackageQty(), product.getPackageUnit());
 
+                    //check if we have a discount period between startDate and endDate
                     if (discount != null && !discount.getFromDate().isBefore(startDate) && !discount.getToDate().isAfter(endDate)) {
                         float reducedPricePerUnit = PriceCalculator.applyDiscount(pricePerUnit, discount.getPercentage());
 
-                        //might start directly reduced
+                        //if the price does not start reduced, put the regular price until the potential discount starts
                         if (discount.getFromDate().isAfter(startDate)) {
                             Map<String, Object> firstInterval = Map.of(
                                     "from", startDate.toString(),
                                     "to", discount.getFromDate().minusDays(1).toString(),
                                     "pricePerUnit", pricePerUnit,
                                     "standardUnit", Unit.getStandard(product.getPackageUnit()),
-                                    "currency", currency
+                                    "currency", catalog.getCurrency()
                             );
                             result.get(product.getName()).get(store).add(firstInterval);
                         }
@@ -315,10 +253,11 @@ public class Service {
                         //category, unit, quantity, brand, price can also be added
                         Map<String, Object> secondInterval = Map.of(
                                 "from", discount.getFromDate().toString(),
+                                //make sure the toDate of the discount does not go further than the available time of a product
                                 "to", !isDiscountToDateAfterEndDate ? discount.getToDate().toString() : endDate.toString(),
                                 "pricePerUnit", reducedPricePerUnit,
                                 "standardUnit", Unit.getStandard(product.getPackageUnit()),
-                                "currency", currency
+                                "currency", catalog.getCurrency()
                         );
 
                         result.get(product.getName()).get(store).add(secondInterval);
@@ -330,22 +269,22 @@ public class Service {
                                     "to", endDate.toString(),
                                     "pricePerUnit", pricePerUnit,
                                     "standardUnit", Unit.getStandard(product.getPackageUnit()),
-                                    "currency", currency
+                                    "currency", catalog.getCurrency()
                             );
                             result.get(product.getName()).get(store).add(thirdInterval);
                         }
                     } else {
+                        // no discount is applied in the startDate - endDate period
                         Map<String, Object> testInterval = Map.of(
                                 "from", startDate.toString(),
                                 "to", endDate.toString(),
                                 "pricePerUnit", pricePerUnit,
                                 "standardUnit", Unit.getStandard(product.getPackageUnit()),
-                                "currency", currency
+                                "currency", catalog.getCurrency()
                         );
 
                         result.get(product.getName()).get(store).add(testInterval);
                     }
-
                 });
             }
         });
@@ -355,5 +294,75 @@ public class Service {
 
     public void establishBasket(List<String> productNames) {
         productBasket.establishBasket(productNames);
+    }
+
+    //DEPRECATED
+
+    public Map<String, Object> getBestDealsDeprecated(BasketFilter basketFilter) {
+        List<ProductStoreDateKey> availableProductsCatalog = storeCatalogDao.getAvailableProductsKeys(currentDate);
+        Map<String, LocalDate> storeDateDiscount = discountDao.getAvailableDiscountDatePerStore(currentDate);
+
+        Map<String, Set<Map<String, Object>>> dealsByProductName = new HashMap<>();
+        Map<String, Float> totalPerStore = new HashMap<>();
+        Map<String, Integer> productCountPerStore = new HashMap<>();
+
+        availableProductsCatalog.forEach(key -> {
+            String storeName = key.storeName();
+            String productId = key.productId();
+            StoreCatalog storeCatalog = storeCatalogDao.getStoreCatalog(key);
+            Product product = productDao.getProduct(productId);
+            String productName = product.getName();
+            float price = storeCatalog.getPrice();
+
+            //apply basket filtering if requested
+            if (basketFilter == BasketFilter.USE && !productBasket.contains(productName))
+                return;
+
+            //check if there is a discount that applies
+            LocalDate availableDiscountDate = storeDateDiscount.get(storeName);
+            ProductStoreDateKey psdKey = new ProductStoreDateKey(productId, storeName, availableDiscountDate);
+            Discount discount = discountDao.getDiscount(psdKey);
+
+            boolean isDiscountApplied = PriceCalculator.isDiscountApplied(discount, currentDate);
+            if (isDiscountApplied)
+                price = PriceCalculator.applyDiscount(price, discount.getPercentage());
+
+            float pricePerUnit = PriceCalculator.findPricePerUnit(price, product.getPackageQty(), product.getPackageUnit());
+
+            if (basketFilter == BasketFilter.USE) {
+                totalPerStore.put(storeName, totalPerStore.getOrDefault(storeName, 0f) + price);
+                productCountPerStore.put(storeName, productCountPerStore.getOrDefault(storeName, 0) + 1);
+            }
+
+            //in sorted order by pricePerUnit
+            dealsByProductName.putIfAbsent(productName, new TreeSet<>(Comparator.comparingDouble(deal -> (float) deal.get("pricePerUnit"))));
+
+            dealsByProductName.get(productName).add(Map.of(
+                    "storeName", storeName,
+                    "pricePerUnit", pricePerUnit,
+                    "price", price,
+                    "currency", storeCatalog.getCurrency(),
+                    "quantity", product.getPackageQty(),
+                    "unit", product.getPackageUnit(),
+                    "brand", product.getBrand(),
+                    "standardUnit", Unit.getStandard(product.getPackageUnit()),
+                    "isDiscountApplied", isDiscountApplied,
+                    "discount", discount != null ? discount : "null"
+            ));
+        });
+
+        float totalForBestDeals = 0;
+        if (basketFilter == BasketFilter.USE)
+            totalForBestDeals = (float) dealsByProductName.values().stream()
+                    .mapToDouble(deals -> (float) ((TreeSet<Map<String, Object>>) deals).first().get("price"))
+                    .sum();
+
+        return Map.of(
+                "deals", dealsByProductName,
+                //add the following calculations only for products from the basket
+                "totalPerStore", totalPerStore.isEmpty() ? "null" : totalPerStore,
+                "totalForBestDeals", totalForBestDeals == 0 ? "null" : totalForBestDeals,
+                "productCountPerStore", productCountPerStore.isEmpty() ? "null" : productCountPerStore
+        );
     }
 }

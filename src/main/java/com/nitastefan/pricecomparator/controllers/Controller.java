@@ -120,7 +120,16 @@ public class Controller {
         app.get("/basket/best-deals", ctx -> {
             try {
                 var bestDeals = service.getBestDeals(BasketFilter.USE);
-                ctx.json(new ApiResponse<>("Best deals for basket retrieved successfully", bestDeals, true));
+                ctx.json(new ApiResponse<>("Best deals of products from basket retrieved successfully", bestDeals, true));
+            } catch (Exception e) {
+                ctx.status(500).json(new ApiResponse<>("An unexpected error occurred :" + e.getMessage(), null, false));
+            }
+        });
+
+        app.get("/basket/best-deals-by-store", ctx -> {
+            try {
+                var bestDeals = service.getBasketDealsByStore();
+                ctx.json(new ApiResponse<>("Best deals for basket by store retrieved successfully", bestDeals, true));
             } catch (Exception e) {
                 ctx.status(500).json(new ApiResponse<>("An unexpected error occurred :" + e.getMessage(), null, false));
             }
@@ -130,6 +139,25 @@ public class Controller {
             try {
                 var productTimeline = service.getPriceTimeline();
                 ctx.json(new ApiResponse<>("Product timeline retrieved successfully", productTimeline, true));
+            } catch (Exception e) {
+                ctx.status(500).json(new ApiResponse<>("An unexpected error occurred :" + e.getMessage(), null, false));
+            }
+        });
+
+        //deprecated methods
+        app.get("/all-products/best-deals-deprecated", ctx -> {
+            try {
+                var bestDeals = service.getBestDealsDeprecated(BasketFilter.NOT_USE);
+                ctx.json(new ApiResponse<>("Best deals of all products retrieved successfully", bestDeals, true));
+            } catch (Exception e) {
+                ctx.status(500).json(new ApiResponse<>("An unexpected error occurred :" + e.getMessage(), null, false));
+            }
+        });
+
+        app.get("/basket/best-deals-deprecated", ctx -> {
+            try {
+                var bestDeals = service.getBestDealsDeprecated(BasketFilter.USE);
+                ctx.json(new ApiResponse<>("Best deals for basket retrieved successfully", bestDeals, true));
             } catch (Exception e) {
                 ctx.status(500).json(new ApiResponse<>("An unexpected error occurred :" + e.getMessage(), null, false));
             }

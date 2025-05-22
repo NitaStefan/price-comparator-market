@@ -10,8 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class DiscountDaoTest {
 
@@ -147,4 +146,59 @@ public class DiscountDaoTest {
         // Then
         assertTrue(result.isEmpty());
     }
+
+    @Test
+    void givenValidStoreAndDate_whenGettingDiscountDateForStore_thenReturnsCorrectDate() {
+        // Given
+        LocalDate currentDate = LocalDate.of(2025, 5, 11);
+
+        // When
+        LocalDate kauflandDate = discountDao.getAvailableDiscountDateForStore(currentDate, "Kaufland");
+        LocalDate lidlDate = discountDao.getAvailableDiscountDateForStore(currentDate, "Lidl");
+        LocalDate profiDate = discountDao.getAvailableDiscountDateForStore(currentDate, "Profi");
+
+        // Then
+        assertEquals(LocalDate.of(2025, 5, 11), kauflandDate);
+        assertEquals(LocalDate.of(2025, 5, 4), lidlDate);
+        assertEquals(LocalDate.of(2025, 5, 5), profiDate);
+    }
+
+    @Test
+    void givenStoreWithNoValidDiscounts_whenGettingDiscountDateForStore_thenReturnsNull() {
+        // Given
+        LocalDate currentDate = LocalDate.of(2025, 5, 5);
+
+        // "MegaImage" only has a future discount
+        LocalDate result = discountDao.getAvailableDiscountDateForStore(currentDate, "MegaImage");
+
+        // Then
+        assertNull(result);
+    }
+
+    @Test
+    void givenInvalidStore_whenGettingDiscountDateForStore_thenReturnsNull() {
+        // Given
+        LocalDate currentDate = LocalDate.of(2025, 5, 10);
+
+        // Store that doesn’t exist in the data
+        LocalDate result = discountDao.getAvailableDiscountDateForStore(currentDate, "Carrefour");
+
+        // Then
+        assertNull(result);
+    }
+
+    @Test
+    void givenFutureDate_whenGettingDiscountDateForStore_thenReturnsLatestAvailable() {
+        // Given
+        LocalDate currentDate = LocalDate.of(2025, 5, 25);
+
+        // When
+        LocalDate kauflandDate = discountDao.getAvailableDiscountDateForStore(currentDate, "Kaufland");
+        LocalDate megaImageDate = discountDao.getAvailableDiscountDateForStore(currentDate, "MegaImage");
+
+        // Then
+        assertEquals(LocalDate.of(2025, 5, 11), kauflandDate);
+        assertEquals(LocalDate.of(2025, 5, 20), megaImageDate);
+    }
+
 }

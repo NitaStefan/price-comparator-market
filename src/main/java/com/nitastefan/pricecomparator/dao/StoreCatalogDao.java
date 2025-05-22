@@ -59,13 +59,13 @@ public class StoreCatalogDao {
 
         return storeCatalogInfo.keySet().stream()
                 .filter(key -> latestAvailableDates.contains(new StoreDate(key.storeName(), key.date())))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public List<ProductStoreDateKey> getCatalogKeysForStoreDate(StoreDate storeDate) {
         return storeCatalogInfo.keySet().stream()
                 .filter(key -> Objects.equals(key.storeName(), storeDate.store()) && Objects.equals(key.date(), storeDate.date()))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public StoreCatalog getStoreCatalog(ProductStoreDateKey key) {

@@ -50,6 +50,18 @@ public class DiscountDao {
         return latestAvailableDates;
     }
 
+    public LocalDate getAvailableDiscountDateForStore(LocalDate currentDate, String store) {
+        List<LocalDate> storeDates = discounts.keySet().stream()
+                .filter(key -> key.storeName().equals(store))
+                .map(ProductStoreDateKey::date)
+                .filter(date -> !date.isAfter(currentDate))
+                .toList();
+
+        return storeDates.stream()
+                .max(Comparator.naturalOrder())
+                .orElse(null);
+    }
+
     public List<ProductStoreDateKey> getAvailableDiscountKeys(LocalDate currentDate) {
         Map<String, Set<LocalDate>> datesByStore = discounts.keySet().stream()
                 .collect(Collectors.groupingBy(

@@ -4,6 +4,7 @@ import com.nitastefan.pricecomparator.controllers.Controller;
 import com.nitastefan.pricecomparator.dao.DiscountDao;
 import com.nitastefan.pricecomparator.dao.ProductDao;
 import com.nitastefan.pricecomparator.dao.StoreCatalogDao;
+import com.nitastefan.pricecomparator.keys.ProductStoreDateKey;
 import com.nitastefan.pricecomparator.services.Service;
 import com.nitastefan.pricecomparator.utils.FileLoader;
 
@@ -28,8 +29,8 @@ public class Main {
         Controller controller = new Controller(service);
 
         //test setup
-        service.setCurrentDate(LocalDate.of(2025,5,21));
-        service.establishBasket(List.of("piper negru măcinat", "morcovi","ciocolată neagră 70%", "șampon păr gras"));
+        service.setCurrentDate(LocalDate.of(2025, 5, 21));
+        service.establishBasket(List.of("piper negru măcinat", "morcovi", "ciocolată neagră 70%", "șampon păr gras"));
 
         controller.startServer();
     }
