@@ -19,14 +19,14 @@ public class DiscountDaoTest {
     @BeforeEach
     void setUp() {
         discountDao = new DiscountDao();
-        discountDao.addDiscount(new ProductStoreDateKey("P001", "Kaufland", LocalDate.of(2025, 5, 1)), new Discount(LocalDate.of(2025, 5, 1), LocalDate.of(2025, 5, 7), (byte) 10));
-        discountDao.addDiscount(new ProductStoreDateKey("P002", "Kaufland", LocalDate.of(2025, 5, 8)), new Discount(LocalDate.of(2025, 5, 8), LocalDate.of(2025, 5, 14), (byte) 15));
-        discountDao.addDiscount(new ProductStoreDateKey("P003", "Kaufland", LocalDate.of(2025, 5, 11)), new Discount(LocalDate.of(2025, 5, 10), LocalDate.of(2025, 5, 16), (byte) 20));
-        discountDao.addDiscount(new ProductStoreDateKey("P004", "Lidl", LocalDate.of(2025, 5, 3)), new Discount(LocalDate.of(2025, 5, 3), LocalDate.of(2025, 5, 9), (byte) 10));
-        discountDao.addDiscount(new ProductStoreDateKey("P005", "Lidl", LocalDate.of(2025, 5, 4)), new Discount(LocalDate.of(2025, 5, 5), LocalDate.of(2025, 5, 12), (byte) 8));
-        discountDao.addDiscount(new ProductStoreDateKey("P006", "Profi", LocalDate.of(2025, 5, 5)), new Discount(LocalDate.of(2025, 5, 4), LocalDate.of(2025, 5, 10), (byte) 15));
-        discountDao.addDiscount(new ProductStoreDateKey("P007", "Profi", LocalDate.of(2025, 5, 5)), new Discount(LocalDate.of(2025, 5, 6), LocalDate.of(2025, 5, 8), (byte) 30));
-        discountDao.addDiscount(new ProductStoreDateKey("P008", "MegaImage", LocalDate.of(2025, 5, 20)), new Discount(LocalDate.of(2025, 5, 20), LocalDate.of(2025, 5, 30), (byte) 25));
+        discountDao.addDiscount(new ProductStoreDateKey("P001", "kaufland", LocalDate.of(2025, 5, 1)), new Discount(LocalDate.of(2025, 5, 1), LocalDate.of(2025, 5, 7), (byte) 10));
+        discountDao.addDiscount(new ProductStoreDateKey("P002", "kaufland", LocalDate.of(2025, 5, 8)), new Discount(LocalDate.of(2025, 5, 8), LocalDate.of(2025, 5, 14), (byte) 15));
+        discountDao.addDiscount(new ProductStoreDateKey("P003", "kaufland", LocalDate.of(2025, 5, 11)), new Discount(LocalDate.of(2025, 5, 10), LocalDate.of(2025, 5, 16), (byte) 20));
+        discountDao.addDiscount(new ProductStoreDateKey("P004", "lidl", LocalDate.of(2025, 5, 3)), new Discount(LocalDate.of(2025, 5, 3), LocalDate.of(2025, 5, 9), (byte) 10));
+        discountDao.addDiscount(new ProductStoreDateKey("P005", "lidl", LocalDate.of(2025, 5, 4)), new Discount(LocalDate.of(2025, 5, 5), LocalDate.of(2025, 5, 12), (byte) 8));
+        discountDao.addDiscount(new ProductStoreDateKey("P006", "profi", LocalDate.of(2025, 5, 5)), new Discount(LocalDate.of(2025, 5, 4), LocalDate.of(2025, 5, 10), (byte) 15));
+        discountDao.addDiscount(new ProductStoreDateKey("P007", "profi", LocalDate.of(2025, 5, 5)), new Discount(LocalDate.of(2025, 5, 6), LocalDate.of(2025, 5, 8), (byte) 30));
+        discountDao.addDiscount(new ProductStoreDateKey("P008", "mega_image", LocalDate.of(2025, 5, 20)), new Discount(LocalDate.of(2025, 5, 20), LocalDate.of(2025, 5, 30), (byte) 25));
     }
 
     @Test
@@ -38,9 +38,9 @@ public class DiscountDaoTest {
         Map<String, LocalDate> result = discountDao.getAvailableDiscountDatePerStore(currentDate);
 
         // Then
-        assertEquals(LocalDate.of(2025, 5, 8), result.get("Kaufland"));
-        assertEquals(LocalDate.of(2025, 5, 4), result.get("Lidl"));
-        assertEquals(LocalDate.of(2025, 5, 5), result.get("Profi"));
+        assertEquals(LocalDate.of(2025, 5, 8), result.get("kaufland"));
+        assertEquals(LocalDate.of(2025, 5, 4), result.get("lidl"));
+        assertEquals(LocalDate.of(2025, 5, 5), result.get("profi"));
     }
 
     @Test
@@ -65,10 +65,10 @@ public class DiscountDaoTest {
         Map<String, LocalDate> result = discountDao.getAvailableDiscountDatePerStore(futureDate);
 
         // Then
-        assertEquals(LocalDate.of(2025, 5, 11), result.get("Kaufland"));
-        assertEquals(LocalDate.of(2025, 5, 4), result.get("Lidl"));
-        assertEquals(LocalDate.of(2025, 5, 5), result.get("Profi"));
-        assertEquals(LocalDate.of(2025, 5, 20), result.get("MegaImage"));
+        assertEquals(LocalDate.of(2025, 5, 11), result.get("kaufland"));
+        assertEquals(LocalDate.of(2025, 5, 4), result.get("lidl"));
+        assertEquals(LocalDate.of(2025, 5, 5), result.get("profi"));
+        assertEquals(LocalDate.of(2025, 5, 20), result.get("mega_image"));
     }
 
     @Test
@@ -93,7 +93,7 @@ public class DiscountDaoTest {
         List<ProductStoreDateKey> result = discountDao.getAvailableDiscountKeys(currentDate);
 
         // Then
-        List<String> expectedKeys = List.of("P002-Kaufland-2025-05-08", "P005-Lidl-2025-05-04", "P006-Profi-2025-05-05", "P007-Profi-2025-05-05");
+        List<String> expectedKeys = List.of("P002-kaufland-2025-05-08", "P005-lidl-2025-05-04", "P006-profi-2025-05-05", "P007-profi-2025-05-05");
         List<String> actualKeys = result.stream()
                 .map(key -> String.format("%s-%s-%s", key.productId(), key.storeName(), key.date()))
                 .toList();
@@ -123,8 +123,8 @@ public class DiscountDaoTest {
         List<ProductStoreDateKey> result = discountDao.getAvailableDiscountKeys(currentDate);
 
         // Then
-        List<String> expectedKeys = List.of("P003-Kaufland-2025-05-11", "P005-Lidl-2025-05-04",
-                "P006-Profi-2025-05-05", "P007-Profi-2025-05-05", "P008-MegaImage-2025-05-20");
+        List<String> expectedKeys = List.of("P003-kaufland-2025-05-11", "P005-lidl-2025-05-04",
+                "P006-profi-2025-05-05", "P007-profi-2025-05-05", "P008-mega_image-2025-05-20");
 
         List<String> actualKeys = result.stream()
                 .map(key -> String.format("%s-%s-%s", key.productId(), key.storeName(), key.date()))
@@ -153,9 +153,9 @@ public class DiscountDaoTest {
         LocalDate currentDate = LocalDate.of(2025, 5, 11);
 
         // When
-        LocalDate kauflandDate = discountDao.getAvailableDiscountDateForStore(currentDate, "Kaufland");
-        LocalDate lidlDate = discountDao.getAvailableDiscountDateForStore(currentDate, "Lidl");
-        LocalDate profiDate = discountDao.getAvailableDiscountDateForStore(currentDate, "Profi");
+        LocalDate kauflandDate = discountDao.getAvailableDiscountDateForStore(currentDate, "kaufland");
+        LocalDate lidlDate = discountDao.getAvailableDiscountDateForStore(currentDate, "lidl");
+        LocalDate profiDate = discountDao.getAvailableDiscountDateForStore(currentDate, "profi");
 
         // Then
         assertEquals(LocalDate.of(2025, 5, 11), kauflandDate);
@@ -168,8 +168,8 @@ public class DiscountDaoTest {
         // Given
         LocalDate currentDate = LocalDate.of(2025, 5, 5);
 
-        // "MegaImage" only has a future discount
-        LocalDate result = discountDao.getAvailableDiscountDateForStore(currentDate, "MegaImage");
+        // mega_image only has a future discount
+        LocalDate result = discountDao.getAvailableDiscountDateForStore(currentDate, "mega_image");
 
         // Then
         assertNull(result);
@@ -193,12 +193,12 @@ public class DiscountDaoTest {
         LocalDate currentDate = LocalDate.of(2025, 5, 25);
 
         // When
-        LocalDate kauflandDate = discountDao.getAvailableDiscountDateForStore(currentDate, "Kaufland");
-        LocalDate megaImageDate = discountDao.getAvailableDiscountDateForStore(currentDate, "MegaImage");
+        LocalDate kauflandDate = discountDao.getAvailableDiscountDateForStore(currentDate, "kaufland");
+        LocalDate mega_imageDate = discountDao.getAvailableDiscountDateForStore(currentDate, "mega_image");
 
         // Then
         assertEquals(LocalDate.of(2025, 5, 11), kauflandDate);
-        assertEquals(LocalDate.of(2025, 5, 20), megaImageDate);
+        assertEquals(LocalDate.of(2025, 5, 20), mega_imageDate);
     }
 
 }
