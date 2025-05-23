@@ -12,10 +12,8 @@ public class ProductBasket {
         this.productNames = new HashSet<>();
     }
 
-
-    public void establishBasket(List<String> productNames) {
-        this.productNames.clear();
-        this.productNames.addAll(productNames);
+    public void setProductNames(Set<String> productNames) {
+        this.productNames = productNames;
     }
 
     public boolean contains(String productName){

@@ -37,7 +37,7 @@ public class StoreCatalogDao {
                 ));
     }
 
-    public List<ProductStoreDateKey> getAvailableProductsKeys(LocalDate currentDate) {
+    public List<ProductStoreDateKey> getAvailableCatalogKeys(LocalDate currentDate) {
         Map<String, Set<LocalDate>> datesByStore = storeCatalogInfo.keySet().stream()
                 .collect(Collectors.groupingBy(
                         ProductStoreDateKey::storeName,

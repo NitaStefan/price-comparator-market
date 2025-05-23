@@ -32,7 +32,7 @@ public class StoreCatalogDaoTest {
     void givenCurrentDate_whenGettingAvailableProductKeys_thenReturnsMostRecentPerStore() {
         LocalDate currentDate = LocalDate.of(2025, 5, 11);
 
-        List<ProductStoreDateKey> result = storeCatalogDao.getAvailableProductsKeys(currentDate);
+        List<ProductStoreDateKey> result = storeCatalogDao.getAvailableCatalogKeys(currentDate);
 
         assertEquals(4, result.size());
         assertTrue(result.contains(new ProductStoreDateKey("P003", "kaufland", LocalDate.of(2025, 5, 11))));
@@ -45,7 +45,7 @@ public class StoreCatalogDaoTest {
     void givenFutureDate_whenGettingAvailableProductKeys_thenReturnsAllLatestPerStore() {
         LocalDate currentDate = LocalDate.of(2025, 5, 30);
 
-        List<ProductStoreDateKey> result = storeCatalogDao.getAvailableProductsKeys(currentDate);
+        List<ProductStoreDateKey> result = storeCatalogDao.getAvailableCatalogKeys(currentDate);
 
         assertEquals(5, result.size());
         assertTrue(result.contains(new ProductStoreDateKey("P003", "kaufland", LocalDate.of(2025, 5, 11))));
@@ -57,7 +57,7 @@ public class StoreCatalogDaoTest {
     void givenPastDate_whenGettingAvailableProductKeys_thenReturnsEmptyList() {
         LocalDate currentDate = LocalDate.of(2025, 4, 30);
 
-        List<ProductStoreDateKey> result = storeCatalogDao.getAvailableProductsKeys(currentDate);
+        List<ProductStoreDateKey> result = storeCatalogDao.getAvailableCatalogKeys(currentDate);
 
         assertTrue(result.isEmpty());
     }
@@ -67,7 +67,7 @@ public class StoreCatalogDaoTest {
         StoreCatalogDao emptyDao = new StoreCatalogDao();
         LocalDate currentDate = LocalDate.of(2025, 5, 10);
 
-        List<ProductStoreDateKey> result = emptyDao.getAvailableProductsKeys(currentDate);
+        List<ProductStoreDateKey> result = emptyDao.getAvailableCatalogKeys(currentDate);
 
         assertTrue(result.isEmpty());
     }

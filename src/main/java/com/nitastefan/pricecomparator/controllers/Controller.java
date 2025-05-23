@@ -1,7 +1,10 @@
 package com.nitastefan.pricecomparator.controllers;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nitastefan.pricecomparator.dto.ApiResponse;
 import com.nitastefan.pricecomparator.dto.DateRequest;
+import com.nitastefan.pricecomparator.dto.ProductTargetsRequest;
 import com.nitastefan.pricecomparator.services.Service;
 import com.nitastefan.pricecomparator.utils.BasketFilter;
 import io.javalin.Javalin;
@@ -55,7 +58,6 @@ public class Controller {
 
         app.post("/basket", ctx -> {
             try {
-                // Parse body as List of Strings (assuming JSON array like: ["apple", "bread", "milk"])
                 List<String> productNames = ctx.bodyAsClass(List.class);
 
                 if (productNames == null || productNames.isEmpty()) {
@@ -67,6 +69,23 @@ public class Controller {
                 ctx.json(new ApiResponse<>("Basket established successfully", productNames, true));
             } catch (Exception e) {
                 ctx.status(400).json(new ApiResponse<>("Invalid input. Expected a JSON array of product names", null, false));
+            }
+        });
+
+        app.post("/product-targets", ctx -> {
+            try {
+                ObjectMapper objectMapper = new ObjectMapper();
+                List<ProductTargetsRequest> productTargets = objectMapper.readValue(ctx.body(), new TypeReference<>() {});
+
+                if (productTargets == null || productTargets.isEmpty()) {
+                    ctx.status(400).json(new ApiResponse<>("Product targets list cannot be empty", null, false));
+                    return;
+                }
+
+                service.establishTargets(productTargets);
+                ctx.json(new ApiResponse<>("Product targets established successfully", productTargets, true));
+            } catch (Exception e) {
+                ctx.status(400).json(new ApiResponse<>("Invalid input. Expected a JSON array of product targets " + e.getMessage(), null, false));
             }
         });
 
@@ -130,6 +149,15 @@ public class Controller {
             try {
                 var bestDeals = service.getBasketDealsByStore();
                 ctx.json(new ApiResponse<>("Best deals for basket by store retrieved successfully", bestDeals, true));
+            } catch (Exception e) {
+                ctx.status(500).json(new ApiResponse<>("An unexpected error occurred :" + e.getMessage(), null, false));
+            }
+        });
+
+        app.get("/check-watched-products", ctx -> {
+            try {
+                var watchedProducts = service.checkWatchedProducts();
+                ctx.json(new ApiResponse<>("Targets for watched products retrieved successfully", watchedProducts, true));
             } catch (Exception e) {
                 ctx.status(500).json(new ApiResponse<>("An unexpected error occurred :" + e.getMessage(), null, false));
             }
