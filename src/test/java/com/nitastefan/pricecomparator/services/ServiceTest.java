@@ -22,7 +22,7 @@ class ServiceTest {
         DiscountDao discountDao = new DiscountDao();
 
         service = new Service(productDao, catalogDao, discountDao);
-        service.setCurrentDate(LocalDate.of(2025, 5, 10));
+        service.setCurrentDate(LocalDate.of(2025, 5, 14));
 
         productDao.addProduct("P001", new Product("iaurt grecesc", "lactate", "Olympus", 1.0f, "l"));
         productDao.addProduct("P002", new Product("biscuiți cu unt", "gustări", "Milka", 500f, "g"));
@@ -52,9 +52,9 @@ class ServiceTest {
         catalogDao.addStoreCatalog(new ProductStoreDateKey("P010", "lidl", LocalDate.of(2025, 5, 17)), new StoreCatalog(2.4f, "RON"));
 
         catalogDao.addStoreCatalog(new ProductStoreDateKey("P003", "mega_image", LocalDate.of(2025, 4, 28)), new StoreCatalog(6.2f, "RON"));
-        catalogDao.addStoreCatalog(new ProductStoreDateKey("P009", "mega_image", LocalDate.of(2025, 5, 11)), new StoreCatalog(2.95f, "RON"));
         catalogDao.addStoreCatalog(new ProductStoreDateKey("P008", "mega_image", LocalDate.of(2025, 5, 10)), new StoreCatalog(3.25f, "RON"));
         catalogDao.addStoreCatalog(new ProductStoreDateKey("P009", "mega_image", LocalDate.of(2025, 5, 10)), new StoreCatalog(3.05f, "RON"));
+        catalogDao.addStoreCatalog(new ProductStoreDateKey("P009", "mega_image", LocalDate.of(2025, 5, 12)), new StoreCatalog(2.95f, "RON"));
 
         catalogDao.addStoreCatalog(new ProductStoreDateKey("P005", "profi", LocalDate.of(2025, 5, 9)), new StoreCatalog(7f, "RON"));
         catalogDao.addStoreCatalog(new ProductStoreDateKey("P006", "profi", LocalDate.of(2025, 5, 10)), new StoreCatalog(23.5f, "RON"));
@@ -85,50 +85,32 @@ class ServiceTest {
                 new Discount(LocalDate.of(2025, 5, 21), LocalDate.of(2025, 5, 25), (byte) 15)
         );
 
-
-        // check the rest of the discounts from here
         discountDao.addDiscount(
-                new ProductStoreDateKey("P008", "lidl", LocalDate.of(2025, 5, 17)),
-                new Discount(LocalDate.of(2025, 5, 9), LocalDate.of(2025, 5, 11), (byte) 6)
+                new ProductStoreDateKey("P006", "lidl", LocalDate.of(2025, 5, 13)),
+                new Discount(LocalDate.of(2025, 5, 13), LocalDate.of(2025, 5, 13), (byte) 28)
         );
         discountDao.addDiscount(
-                new ProductStoreDateKey("P002", "lidl", LocalDate.of(2025, 5, 8)),
-                new Discount(LocalDate.of(2025, 5, 15), LocalDate.of(2025, 5, 20), (byte) 10)
+                new ProductStoreDateKey("P008", "lidl", LocalDate.of(2025, 5, 19)),
+                new Discount(LocalDate.of(2025, 5, 20), LocalDate.of(2025, 5, 25), (byte) 9)
         );
         discountDao.addDiscount(
-                new ProductStoreDateKey("P006", "lidl", LocalDate.of(2025, 5, 8)),
-                new Discount(LocalDate.of(2025, 4, 25), LocalDate.of(2025, 5, 5), (byte) 12)
+                new ProductStoreDateKey("P010", "lidl", LocalDate.of(2025, 5, 19)),
+                new Discount(LocalDate.of(2025, 4, 19), LocalDate.of(2025, 5, 21), (byte) 18)
         );
 
         discountDao.addDiscount(
-                new ProductStoreDateKey("P003", "mega_image", LocalDate.of(2025, 5, 10)),
-                new Discount(LocalDate.of(2025, 5, 9), LocalDate.of(2025, 5, 12), (byte) 12)
-        );
-        discountDao.addDiscount(
-                new ProductStoreDateKey("P009", "mega_image", LocalDate.of(2025, 5, 10)),
-                new Discount(LocalDate.of(2025, 4, 30), LocalDate.of(2025, 5, 7), (byte) 5)
-        );
-        discountDao.addDiscount(
-                new ProductStoreDateKey("P008", "mega_image", LocalDate.of(2025, 5, 10)),
-                new Discount(LocalDate.of(2025, 5, 9), LocalDate.of(2025, 5, 12), (byte) 8)
+                new ProductStoreDateKey("P003", "mega_image", LocalDate.of(2025, 4, 28)),
+                new Discount(LocalDate.of(2025, 4, 28), LocalDate.of(2025, 5, 9), (byte) 5)
         );
 
         discountDao.addDiscount(
-                new ProductStoreDateKey("P005", "profi", LocalDate.of(2025, 5, 9)),
-                new Discount(LocalDate.of(2025, 5, 1), LocalDate.of(2025, 5, 5), (byte) 10)
+                new ProductStoreDateKey("P006", "profi", LocalDate.of(2025, 5, 12)),
+                new Discount(LocalDate.of(2025, 5, 13), LocalDate.of(2025, 5, 15), (byte) 10)
         );
         discountDao.addDiscount(
-                new ProductStoreDateKey("P006", "profi", LocalDate.of(2025, 5, 10)),
-                new Discount(LocalDate.of(2025, 5, 9), LocalDate.of(2025, 5, 12), (byte) 10)
-        );
-        discountDao.addDiscount(
-                new ProductStoreDateKey("P012", "profi", LocalDate.of(2025, 5, 21)),
-                new Discount(LocalDate.of(2025, 5, 22), LocalDate.of(2025, 5, 30), (byte) 20)
-        );
-        discountDao.addDiscount(
-                new ProductStoreDateKey("P011", "profi", LocalDate.of(2025, 5, 21)),
-                new Discount(LocalDate.of(2025, 5, 10), LocalDate.of(2025, 5, 20), (byte) 1)
-        );
+                new ProductStoreDateKey("P007", "profi", LocalDate.of(2025, 5, 12)),
+                new Discount(LocalDate.of(2025, 5, 14), LocalDate.of(2025, 5, 18), (byte) 14)
+        );    new Discount(LocalDate.of(2025, 5, 10), LocalDate.of(2025, 5, 20), (byte) 1);
     }
 
 
@@ -136,30 +118,63 @@ class ServiceTest {
     void getAvailableProductsByCategory_returnsCorrectlyGroupedProducts() {
         Map<String, Set<String>> result = service.getAvailableProductsByCategory();
 
-        assertEquals(2, result.size());
+        assertEquals(4, result.size());
 
-        assertTrue(result.containsKey("Dairy"));
-        assertTrue(result.containsKey("Bakery"));
+        assertTrue(result.containsKey("băuturi"));
+        assertTrue(result.containsKey("gustări"));
+        assertTrue(result.containsKey("legume și fructe"));
+        assertTrue(result.containsKey("alimente de bază"));
 
-        assertEquals(Set.of("Milk", "Cheese"), result.get("Dairy"));
-        assertEquals(Set.of("Bread"), result.get("Bakery"));
+        assertEquals(Set.of("vin alb demisec", "suc portocale"), result.get("băuturi"));
+        assertEquals(Set.of( "ciocolată neagră 70%"), result.get("gustări"));
+        assertEquals(Set.of("morcovi", "ceapă galbenă"), result.get("legume și fructe"));
+        assertEquals(Set.of("ulei floarea-soarelui"), result.get("alimente de bază"));
     }
+
+
 
     @Test
     void getAvailableProductsByCategory_ignoresUnavailableDates() {
-        // Change current date to before any product is available
-        service.setCurrentDate(LocalDate.of(2025, 5, 1));
+        service.setCurrentDate(LocalDate.of(2025, 4, 27)); // Before any available date
 
         Map<String, Set<String>> result = service.getAvailableProductsByCategory();
         assertTrue(result.isEmpty());
     }
 
+
     @Test
     void getAvailableProductsByCategory_withEmptyCatalog_returnsEmptyMap() {
         Service emptyService = new Service(new ProductDao(), new StoreCatalogDao(), new DiscountDao());
-        emptyService.setCurrentDate(LocalDate.of(2025, 5, 10));
 
         Map<String, Set<String>> result = emptyService.getAvailableProductsByCategory();
         assertTrue(result.isEmpty());
     }
+
+    @Test
+    void getLatestDiscounts_returnsOnlyRecentDiscounts() {
+
+        List<Map<String, Object>> result = service.getLatestDiscounts(3); // From 2025-05-11 to 2025-05-14
+
+        assertEquals(3, result.size());
+
+        // Check that expected discounts are present
+        Set<String> productNames = new HashSet<>();
+        for (Map<String, Object> discount : result) {
+            productNames.add((String) discount.get("productName"));
+        }
+
+        assertTrue(productNames.contains("vin alb demisec"));
+        assertTrue(productNames.contains("ciocolată neagră 70%"));
+    }
+
+
+    @Test
+    void getLatestDiscounts_returnsEmptyListWhenNoRecentDiscounts() {
+        List<Map<String, Object>> result = service.getLatestDiscounts(0);
+
+        assertTrue(result.isEmpty());
+    }
+
+
+
 }

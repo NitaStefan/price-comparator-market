@@ -32,7 +32,6 @@ public class Main {
 
         //test setup
         service.setCurrentDate(LocalDate.of(2025, 5, 21));
-        service.establishBasket(List.of("piper negru măcinat", "morcovi", "ciocolată neagră 70%", "șampon păr gras"));
 
         controller.startServer();
     }
