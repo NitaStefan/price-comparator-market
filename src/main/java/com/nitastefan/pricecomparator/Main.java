@@ -31,7 +31,7 @@ public class Main {
         Controller controller = new Controller(service);
 
         //test setup
-        service.setCurrentDate(LocalDate.of(2025, 5, 21));
+        service.setCurrentDate(LocalDate.of(2025, 5, 9));
 
         controller.startServer();
     }

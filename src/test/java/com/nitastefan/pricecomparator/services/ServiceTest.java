@@ -1,8 +1,10 @@
 package com.nitastefan.pricecomparator.services;
 
 import com.nitastefan.pricecomparator.dao.*;
+import com.nitastefan.pricecomparator.dto.ProductTargetsRequest;
 import com.nitastefan.pricecomparator.keys.ProductStoreDateKey;
 import com.nitastefan.pricecomparator.models.*;
+import com.nitastefan.pricecomparator.utils.BasketFilter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -110,7 +112,7 @@ class ServiceTest {
         discountDao.addDiscount(
                 new ProductStoreDateKey("P007", "profi", LocalDate.of(2025, 5, 12)),
                 new Discount(LocalDate.of(2025, 5, 14), LocalDate.of(2025, 5, 18), (byte) 14)
-        );    new Discount(LocalDate.of(2025, 5, 10), LocalDate.of(2025, 5, 20), (byte) 1);
+        );
     }
 
 
@@ -126,11 +128,10 @@ class ServiceTest {
         assertTrue(result.containsKey("alimente de bază"));
 
         assertEquals(Set.of("vin alb demisec", "suc portocale"), result.get("băuturi"));
-        assertEquals(Set.of( "ciocolată neagră 70%"), result.get("gustări"));
+        assertEquals(Set.of("ciocolată neagră 70%"), result.get("gustări"));
         assertEquals(Set.of("morcovi", "ceapă galbenă"), result.get("legume și fructe"));
         assertEquals(Set.of("ulei floarea-soarelui"), result.get("alimente de bază"));
     }
-
 
 
     @Test
@@ -175,6 +176,106 @@ class ServiceTest {
         assertTrue(result.isEmpty());
     }
 
+    @Test
+    void getBestDeals_withoutBasketFilter_returnsDealsGroupedByProduct() {
+        Map<String, Object> result = service.getBestDeals(BasketFilter.NOT_USE);
 
+        assertNotNull(result.get("deals"));
+        Map<String, Set<Map<String, Object>>> deals = (Map<String, Set<Map<String, Object>>>) result.get("deals");
+
+        assertEquals(6, deals.size());
+
+        assertTrue(deals.containsKey("ulei floarea-soarelui"));
+        assertTrue(deals.containsKey("ciocolată neagră 70%"));
+        assertTrue(deals.containsKey("vin alb demisec"));
+        assertTrue(deals.containsKey("suc portocale"));
+        assertTrue(deals.containsKey("morcovi"));
+        assertTrue(deals.containsKey("ceapă galbenă"));
+
+        // Check structure of a specific deal
+        Set<Map<String, Object>> vinAlbDemisecDeal = deals.get("vin alb demisec");
+        Set<Map<String, Object>> morcoviDeal = deals.get("morcovi");
+
+        assertEquals(28.2f, (float) ((TreeSet<Map<String, Object>>) vinAlbDemisecDeal).first().get("pricePerUnit"));
+        assertEquals(5f, (float) ((TreeSet<Map<String, Object>>) morcoviDeal).first().get("pricePerUnit"));
+    }
+
+    @Test
+    void getBasketDealsByStore_returnsCorrectDealsGroupedByStore() {
+        service.establishBasket(List.of("vin alb demisec", "ciocolată neagră 70%", "morcovi"));
+
+        Map<String, Map<String, Object>> result = service.getBasketDealsByStore();
+
+        assertEquals(2, result.size());
+        assertTrue(result.containsKey("profi"));
+        assertTrue(result.containsKey("kaufland"));
+
+        Map<String, Object> profiDeals = result.get("profi");
+        Map<String, Object> kauflandDeals = result.get("kaufland");
+
+        // Check profi results for vin alb demisec
+        assertTrue(profiDeals.containsKey("vin alb demisec"));
+        Map<String, Object> vinDeal = (Map<String, Object>) profiDeals.get("vin alb demisec");
+        assertEquals(28.2f, (float) vinDeal.get("pricePerUnit"), 0.01f);
+        assertTrue((Boolean) vinDeal.get("isDiscountApplied"));
+
+        // Check kaufland results for ciocolată neagră 70% and morcovi
+        assertTrue(kauflandDeals.containsKey("ciocolată neagră 70%"));
+        assertTrue(kauflandDeals.containsKey("morcovi"));
+
+        Map<String, Object> morcoviDeal = (Map<String, Object>) kauflandDeals.get("morcovi");
+        assertEquals(5.0f, (float) morcoviDeal.get("pricePerUnit"), 0.01f);
+        assertFalse((Boolean) morcoviDeal.get("isDiscountApplied")); // discount starts after currentDate
+
+        // Check total is present
+        assertTrue(profiDeals.containsKey("total"));
+        assertTrue(kauflandDeals.containsKey("total"));
+
+        assertEquals(24.72f, (float) profiDeals.get("total"), 0.01f);
+        assertEquals(6.7f, (float) kauflandDeals.get("total"), 0.01f);
+    }
+
+    @Test
+    void getBasketDealsByStore_ignoresUnavailableProducts() {
+        // Use a product that is not available on the current date
+        service.establishBasket(List.of("cașcaval")); // cașcaval available only from 20 May
+
+        Map<String, Map<String, Object>> result = service.getBasketDealsByStore();
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void checkWatchedProducts_returnsCorrectProductsBelowTargetPrice() {
+        // Establish the targets
+        service.establishTargets(List.of(
+                new ProductTargetsRequest(4.2f, 350f, "g", "spaghetti nr.5"),
+                new ProductTargetsRequest(10.0f, 200f, "g", "ciocolată neagră 70%")
+        ));
+
+        // Run the check
+        Map<String, Map<String, Object>> result = service.checkWatchedProducts();
+
+        // Validate
+        assertEquals(1, result.size());
+        assertTrue(result.containsKey("ciocolată neagră 70%"));
+
+        Map<String, Object> chocolateDeal = result.get("ciocolată neagră 70%");
+        float pricePerUnit = (float) chocolateDeal.get("pricePerUnit");
+
+        // 4.2 RON / 100g = 42 RON/kg -> which is below 50 RON/kg target
+        assertTrue(pricePerUnit <= 50.0f);
+    }
+
+    @Test
+    void checkWatchedProducts_returnsEmptyWhenNoDealsMatchTarget() {
+        // Set an unrealistic low target so nothing qualifies
+        service.establishTargets(List.of(
+                new ProductTargetsRequest(1.0f, 500f, "g", "spaghetti nr.5")
+        ));
+
+        Map<String, Map<String, Object>> result = service.checkWatchedProducts();
+
+        assertTrue(result.isEmpty());
+    }
 
 }
