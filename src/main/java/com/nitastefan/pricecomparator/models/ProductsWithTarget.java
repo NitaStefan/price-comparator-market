@@ -1,6 +1,7 @@
 package com.nitastefan.pricecomparator.models;
 
 import com.nitastefan.pricecomparator.dto.ProductTargetsRequest;
+import com.nitastefan.pricecomparator.utils.PriceCalculator;
 
 import java.util.HashMap;
 import java.util.List;

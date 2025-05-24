@@ -1,6 +1,7 @@
 package com.nitastefan.pricecomparator.services;
 
 import com.nitastefan.pricecomparator.dao.*;
+import com.nitastefan.pricecomparator.dto.ProductDealDto;
 import com.nitastefan.pricecomparator.dto.ProductTargetsRequest;
 import com.nitastefan.pricecomparator.keys.ProductStoreDateKey;
 import com.nitastefan.pricecomparator.models.*;
@@ -160,9 +161,8 @@ class ServiceTest {
 
         // Check that expected discounts are present
         Set<String> productNames = new HashSet<>();
-        for (Map<String, Object> discount : result) {
+        for (Map<String, Object> discount : result)
             productNames.add((String) discount.get("productName"));
-        }
 
         assertTrue(productNames.contains("vin alb demisec"));
         assertTrue(productNames.contains("ciocolată neagră 70%"));
@@ -181,7 +181,7 @@ class ServiceTest {
         Map<String, Object> result = service.getBestDeals(BasketFilter.NOT_USE);
 
         assertNotNull(result.get("deals"));
-        Map<String, Set<Map<String, Object>>> deals = (Map<String, Set<Map<String, Object>>>) result.get("deals");
+        Map<String, Set<ProductDealDto>> deals = (Map<String, Set<ProductDealDto>>) result.get("deals");
 
         assertEquals(6, deals.size());
 
@@ -193,11 +193,11 @@ class ServiceTest {
         assertTrue(deals.containsKey("ceapă galbenă"));
 
         // Check structure of a specific deal
-        Set<Map<String, Object>> vinAlbDemisecDeal = deals.get("vin alb demisec");
-        Set<Map<String, Object>> morcoviDeal = deals.get("morcovi");
+        Set<ProductDealDto> vinAlbDemisecDeal = deals.get("vin alb demisec");
+        Set<ProductDealDto> morcoviDeal = deals.get("morcovi");
 
-        assertEquals(28.2f, (float) ((TreeSet<Map<String, Object>>) vinAlbDemisecDeal).first().get("pricePerUnit"));
-        assertEquals(5f, (float) ((TreeSet<Map<String, Object>>) morcoviDeal).first().get("pricePerUnit"));
+        assertEquals(28.2f, ((TreeSet<ProductDealDto>) vinAlbDemisecDeal).first().getPricePerUnit());
+        assertEquals(5f, ((TreeSet<ProductDealDto>) morcoviDeal).first().getPricePerUnit());
     }
 
     @Test
@@ -215,17 +215,17 @@ class ServiceTest {
 
         // Check profi results for vin alb demisec
         assertTrue(profiDeals.containsKey("vin alb demisec"));
-        Map<String, Object> vinDeal = (Map<String, Object>) profiDeals.get("vin alb demisec");
-        assertEquals(28.2f, (float) vinDeal.get("pricePerUnit"), 0.01f);
-        assertTrue((Boolean) vinDeal.get("isDiscountApplied"));
+        ProductDealDto vinDeal = (ProductDealDto) profiDeals.get("vin alb demisec");
+        assertEquals(28.2f, vinDeal.getPricePerUnit(), 0.01f);
+        assertTrue(vinDeal.isDiscountApplied());
 
         // Check kaufland results for ciocolată neagră 70% and morcovi
         assertTrue(kauflandDeals.containsKey("ciocolată neagră 70%"));
         assertTrue(kauflandDeals.containsKey("morcovi"));
 
-        Map<String, Object> morcoviDeal = (Map<String, Object>) kauflandDeals.get("morcovi");
-        assertEquals(5.0f, (float) morcoviDeal.get("pricePerUnit"), 0.01f);
-        assertFalse((Boolean) morcoviDeal.get("isDiscountApplied")); // discount starts after currentDate
+        ProductDealDto morcoviDeal = (ProductDealDto) kauflandDeals.get("morcovi");
+        assertEquals(5.0f, morcoviDeal.getPricePerUnit(), 0.01f);
+        assertFalse(morcoviDeal.isDiscountApplied()); // discount starts after currentDate
 
         // Check total is present
         assertTrue(profiDeals.containsKey("total"));
@@ -253,14 +253,14 @@ class ServiceTest {
         ));
 
         // Run the check
-        Map<String, Map<String, Object>> result = service.checkWatchedProducts();
+        Map<String, ProductDealDto> result = service.checkWatchedProducts();
 
         // Validate
         assertEquals(1, result.size());
         assertTrue(result.containsKey("ciocolată neagră 70%"));
 
-        Map<String, Object> chocolateDeal = result.get("ciocolată neagră 70%");
-        float pricePerUnit = (float) chocolateDeal.get("pricePerUnit");
+        ProductDealDto chocolateDeal = result.get("ciocolată neagră 70%");
+        float pricePerUnit = chocolateDeal.getPricePerUnit();
 
         // 4.2 RON / 100g = 42 RON/kg -> which is below 50 RON/kg target
         assertTrue(pricePerUnit <= 50.0f);
@@ -273,7 +273,7 @@ class ServiceTest {
                 new ProductTargetsRequest(1.0f, 500f, "g", "spaghetti nr.5")
         ));
 
-        Map<String, Map<String, Object>> result = service.checkWatchedProducts();
+        Map<String, ProductDealDto> result = service.checkWatchedProducts();
 
         assertTrue(result.isEmpty());
     }

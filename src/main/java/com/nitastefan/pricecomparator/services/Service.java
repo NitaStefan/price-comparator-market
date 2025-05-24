@@ -3,6 +3,7 @@ package com.nitastefan.pricecomparator.services;
 import com.nitastefan.pricecomparator.dao.DiscountDao;
 import com.nitastefan.pricecomparator.dao.ProductDao;
 import com.nitastefan.pricecomparator.dao.StoreCatalogDao;
+import com.nitastefan.pricecomparator.dto.ProductDealDto;
 import com.nitastefan.pricecomparator.dto.ProductTargetsRequest;
 import com.nitastefan.pricecomparator.keys.ProductStoreDateKey;
 import com.nitastefan.pricecomparator.models.*;
@@ -47,6 +48,10 @@ public class Service {
         return productBasket.getProductNames();
     }
 
+    public Map<String, ProductPricing> getProductsWithTarget() {
+        return productsWithTarget.getProducts();
+    }
+
     public void setProductBasket(ProductBasket productBasket) {
         this.productBasket = productBasket;
     }
@@ -87,14 +92,15 @@ public class Service {
             Discount discount = discountDao.getDiscount(key);
             Product product = productDao.getProduct(key.productId());
 
-            if (discount.getFromDate().isAfter(currentDate.minusDays(lastDays)) && !discount.getFromDate().isAfter(currentDate)) {
+            if (discount.getFromDate().isAfter(currentDate.minusDays(lastDays)) && !discount.getFromDate().isAfter(currentDate) && !discount.getToDate().isBefore(currentDate)) {
                 result.add(Map.of(
                         "store", key.storeName(),
                         "productName", product.getName(),
                         "discountPercentage", discount.getPercentage(),
                         "discountStartDate", discount.getFromDate().toString(),
+                        "discountEndDate", discount.getToDate().toString(),
                         "brand", product.getBrand(),
-                        "qty", product.getPackageQty(),
+                        "quantity", product.getPackageQty(),
                         "unit", product.getPackageUnit()
                 ));
             }
@@ -107,7 +113,7 @@ public class Service {
         List<ProductStoreDateKey> availableCatalog = storeCatalogDao.getAvailableCatalogKeys(currentDate);
         Map<String, LocalDate> storeDiscountDate = discountDao.getAvailableDiscountDatePerStore(currentDate);
 
-        Map<String, Set<Map<String, Object>>> dealsByProductName = new HashMap<>();
+        Map<String, Set<ProductDealDto>> dealsByProductName = new HashMap<>();
 
         for (ProductStoreDateKey key : availableCatalog) {
             StoreCatalog storeCatalog = storeCatalogDao.getStoreCatalog(key);
@@ -132,27 +138,28 @@ public class Service {
             float pricePerUnit = PriceCalculator.findPricePerUnit(price, product.getPackageQty(), product.getPackageUnit());
 
             //in sorted order by pricePerUnit (best deal to worst deal)
-            dealsByProductName.putIfAbsent(product.getName(), new TreeSet<>(Comparator.comparingDouble(deal -> (float) deal.get("pricePerUnit"))));
+            dealsByProductName.putIfAbsent(product.getName(), new TreeSet<>(Comparator.comparingDouble(ProductDealDto::getPricePerUnit)));
 
-            dealsByProductName.get(product.getName()).add(Map.of(
-                    "storeName", key.storeName(),
-                    "pricePerUnit", pricePerUnit,
-                    "price", price,
-                    "currency", storeCatalog.getCurrency(),
-                    "quantity", product.getPackageQty(),
-                    "unit", product.getPackageUnit(),
-                    "brand", product.getBrand(),
-                    "standardUnit", Unit.getStandard(product.getPackageUnit()),
-                    "isDiscountApplied", hasDiscount,
-                    "discount", discount != null ? discount : "null"
-            ));
+            dealsByProductName.get(product.getName()).add(new ProductDealDto.Builder()
+                    .storeName(key.storeName())
+                    .productName(product.getName())
+                    .price(price)
+                    .pricePerUnit(pricePerUnit)
+                    .currency(storeCatalog.getCurrency())
+                    .quantity(product.getPackageQty())
+                    .unit(product.getPackageUnit())
+                    .standardUnit(Unit.getStandard(product.getPackageUnit()))
+                    .brand(product.getBrand())
+                    .isDiscountApplied(hasDiscount)
+                    .discount(discount)
+                    .build()
+            );
         }
-        ;
 
         float totalForBestDeals = 0;
         if (basketFilter == BasketFilter.USE)
             totalForBestDeals = (float) dealsByProductName.values().stream()
-                    .mapToDouble(deals -> (float) ((TreeSet<Map<String, Object>>) deals).first().get("price")).sum();
+                    .mapToDouble(deals -> ((TreeSet<ProductDealDto>) deals).first().getPrice()).sum();
 
         return Map.of(
                 "deals", dealsByProductName,
@@ -189,17 +196,17 @@ public class Service {
             dealsByStore.putIfAbsent(store, new HashMap<>());
             dealsByStore.get(store).put("total", (float) dealsByStore.get(store).getOrDefault("total", 0f) + price);
 
-            dealsByStore.get(store).put(product.getName(), Map.of(
-                    "price", price,
-                    "pricePerUnit", pricePerUnit,
-                    "currency", catalog.getCurrency(),
-                    "quantity", product.getPackageQty(),
-                    "unit", product.getPackageUnit(),
-                    "brand", product.getBrand(),
-                    "standardUnit", Unit.getStandard(product.getPackageUnit()),
-                    "isDiscountApplied", hasDiscount,
-                    "discount", discount != null ? discount : "null"
-            ));
+            dealsByStore.get(store).put(product.getName(), new ProductDealDto.Builder()
+                    .price(price)
+                    .pricePerUnit(pricePerUnit)
+                    .currency(catalog.getCurrency())
+                    .quantity(product.getPackageQty())
+                    .unit(product.getPackageUnit())
+                    .standardUnit(Unit.getStandard(product.getPackageUnit()))
+                    .brand(product.getBrand())
+                    .isDiscountApplied(hasDiscount)
+                    .discount(discount)
+                    .build());
         }
 
         return dealsByStore;
@@ -254,6 +261,7 @@ public class Service {
                                     "currency", catalog.getCurrency()
                             );
                             result.get(product.getName()).get(store).add(firstInterval);
+
                         }
 
                         boolean isDiscountToDateAfterEndDate = discount.getToDate().isAfter(endDate);
@@ -300,12 +308,12 @@ public class Service {
         return result;
     }
 
-    public Map<String, Map<String, Object>> checkWatchedProducts() {
+    public Map<String, ProductDealDto> checkWatchedProducts() {
 
         List<ProductStoreDateKey> availableCatalog = storeCatalogDao.getAvailableCatalogKeys(currentDate);
         Map<String, LocalDate> storeDiscountDate = discountDao.getAvailableDiscountDatePerStore(currentDate);
 
-        Map<String, Map<String, Object>> result = new HashMap<>();
+        Map<String, ProductDealDto> result = new HashMap<>();
 
         for (ProductStoreDateKey key : availableCatalog) {
             String store = key.storeName();
@@ -331,19 +339,20 @@ public class Service {
             float pricePerUnit = PriceCalculator.findPricePerUnit(price, product.getPackageQty(), product.getPackageUnit());
 
             if (pricePerUnit <= targetPricePerUnit) {
-                Map<String, Object> targetProduct = Map.of(
-                        "pricePerUnit", pricePerUnit,
-                        "standardUnit", Unit.getStandard(product.getPackageUnit()),
-                        "price", catalog.getPrice(),
-                        "currency", catalog.getCurrency(),
-                        "quantity", product.getPackageQty(),
-                        "unit", product.getPackageUnit(),
-                        "brand", product.getBrand()
-                );
+                ProductDealDto targetProduct = new ProductDealDto.Builder()
+                        .storeName(store)
+                        .price(price)
+                        .pricePerUnit(pricePerUnit)
+                        .currency(catalog.getCurrency())
+                        .quantity(product.getPackageQty())
+                        .unit(product.getPackageUnit())
+                        .standardUnit(Unit.getStandard(product.getPackageUnit()))
+                        .brand(product.getBrand())
+                        .build();
 
                 //among all the products below the target, get the one with the best offer
                 if (result.containsKey(productName)) {
-                    if ((float) result.get(productName).get("pricePerUnit") > pricePerUnit)
+                    if (result.get(productName).getPricePerUnit() > pricePerUnit)
                         result.put(productName, targetProduct);
 
                 } else result.put(productName, targetProduct);
@@ -357,7 +366,7 @@ public class Service {
         productBasket.setProductNames(new HashSet<>(productNames));
     }
 
-    public void establishTargets(List<ProductTargetsRequest> targets){
+    public void establishTargets(List<ProductTargetsRequest> targets) {
         productsWithTarget.establishTargets(targets);
     }
 

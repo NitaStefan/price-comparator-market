@@ -109,8 +109,17 @@ public class Controller {
 
         app.get("/basket-products", ctx -> {
             try {
-                Set<String> productNames = service.getProductsFromBasket();
-                ctx.json(new ApiResponse<>("Basket products retrieved successfully", productNames, true));
+                Set<String> basketProducts = service.getProductsFromBasket();
+                ctx.json(new ApiResponse<>("Basket products retrieved successfully", basketProducts, true));
+            } catch (Exception e) {
+                ctx.status(500).json(new ApiResponse<>("An unexpected error occurred", null, false));
+            }
+        });
+
+        app.get("/products-with-target", ctx -> {
+            try {
+                var productsWithTarget = service.getProductsWithTarget();
+                ctx.json(new ApiResponse<>("Products with target retrieved successfully", productsWithTarget, true));
             } catch (Exception e) {
                 ctx.status(500).json(new ApiResponse<>("An unexpected error occurred", null, false));
             }
