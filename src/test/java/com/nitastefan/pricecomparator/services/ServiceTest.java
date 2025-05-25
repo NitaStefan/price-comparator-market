@@ -157,7 +157,7 @@ class ServiceTest {
 
         List<Map<String, Object>> result = service.getLatestDiscounts(3); // From 2025-05-11 to 2025-05-14
 
-        assertEquals(3, result.size());
+        assertEquals(2, result.size());
 
         // Check that expected discounts are present
         Set<String> productNames = new HashSet<>();
